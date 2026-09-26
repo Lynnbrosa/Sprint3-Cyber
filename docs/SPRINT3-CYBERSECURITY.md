@@ -134,6 +134,15 @@ sobre **o código final**. Relatórios em [`docs/evidencias/scans/`](evidencias/
 Os achados do "depois" não foram maquiados: o Trivy e o Gitleaks **pegaram problemas reais no
 próprio trabalho desta sprint**, e a correção virou commit. É o ciclo que o pipeline impõe.
 
+**Primeira execução no GitHub** (repositório `Lynnbrosa/Sprint3-Cyber`, 26/09/2026 13:08 UTC):
+gitleaks, IaC e os 75 testes contra Postgres passaram no runner. SAST e SCA ficaram vermelhos por
+**defeito do próprio workflow**, não por achado: o container do semgrep recusa `pip install`
+(PEP 668) e o bandit não instalava; o pip-audit não cria o arquivo de relatório quando não há
+vulnerabilidade e o passo que o lia quebrava. A revisão da falha também achou três problemas nos
+estágios que ainda não tinham rodado (nome da imagem no GHCR precisa ser minúsculo, ZAP quebrava em
+aviso e não só em FAIL, `compose run` sem `-T`). Tudo corrigido no commit seguinte; o Dependabot já
+abriu as primeiras verificações de pip, Docker, Compose e Actions.
+
 ### 1.5 Rotina contínua ligada ao pipeline
 
 | Rotina | Onde está | Frequência |
@@ -638,7 +647,6 @@ RPO de 24 h e RTO de 4 h no ambiente de demo; em produção, PITR de 5 min do ba
 | Chave Fernet/JWT em variável/arquivo | ambiente acadêmico | Azure Key Vault / AWS KMS no deploy |
 | Tráfego interno em HTTP dentro da rede do cluster | rede isolada | service mesh com mTLS (Linkerd/Istio) |
 | Usuário único do banco escreve em `audit_logs` | migrations e app compartilham o papel | papéis separados (`app_rw` sem `UPDATE/DELETE` em `audit_logs`) |
-| Pipeline do GitHub Actions ainda não rodou no GitHub | o repositório final será criado pelo grupo | primeiro push; as ferramentas já foram executadas localmente com o mesmo resultado |
 | ZAP não executado localmente | imagem de ~1,5 GB e máquina no limite | roda no job 7 do pipeline |
 
 ---
