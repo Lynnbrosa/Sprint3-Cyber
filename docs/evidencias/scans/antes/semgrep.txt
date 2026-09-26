@@ -1,0 +1,13 @@
+                  
+                  
+┌────────────────┐
+│ 1 Code Finding │
+└────────────────┘
+              
+    Dockerfile
+   ❯❯❱ semgrep.forwarded-allow-ips-coringa
+          ❰❰ Blocking ❱❱
+          uvicorn com --forwarded-allow-ips=* deixa o cliente escolher o proprio IP (bypass de rate limit).
+                                                                                                           
+           32┆ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "
+               --forwarded-allow-ips=*"]                                                                  

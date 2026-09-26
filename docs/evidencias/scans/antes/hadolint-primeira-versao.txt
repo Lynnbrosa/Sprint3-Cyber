@@ -1,0 +1,3 @@
+-:11 DL3045 warning: `COPY` to a relative destination without `WORKDIR` set.
+-:12 DL3013 warning: Pin versions in pip. Instead of `pip install <package>` use `pip install <package>==<version>` or `pip install --requirement <requirements file>`
+hadolint exit=1

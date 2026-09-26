@@ -1,0 +1,57 @@
+$ docker compose --profile demo run --rm simulador --modo normal --n 6 --intervalo 0.5
+[normal] 9BFZZZ8F7NB000001 leitura 1/6 km=31551: PUBACK Success
+[normal] 9BFZZZ8F7NB000001 leitura 2/6 km=32372: PUBACK Success
+[normal] 9BFZZZ8F7NB000001 leitura 3/6 km=32558: PUBACK Success
+[normal] 9BFZZZ8F7NB000001 leitura 4/6 km=32953: PUBACK Success
+[normal] 9BFZZZ8F7NB000001 leitura 5/6 km=33829: PUBACK Success
+[normal] 9BFZZZ8F7NB000001 leitura 6/6 km=34377: PUBACK Success
+(exit 0)
+
+$ docker compose --profile demo run --rm simulador --modo sem-certificado
+[sem-certificado] recusado pelo broker antes do CONNACK: Unspecified error (log do mosquitto: 'peer did not return a certificate' / 'certificate verify failed')
+(exit 0)
+
+$ docker compose --profile demo run --rm simulador --modo ca-falsa
+[ca-falsa] recusado pelo broker antes do CONNACK: Unspecified error (log do mosquitto: 'peer did not return a certificate' / 'certificate verify failed')
+(exit 0)
+
+$ docker compose --profile demo run --rm simulador --modo texto-claro
+[texto-claro] porta 1883 fechada: ConnectionRefusedError
+(exit 0)
+
+$ docker compose --profile demo run --rm simulador --modo topico-alheio
+[topico-alheio] 9BFZZZ8F7NB000001 tentou publicar em ford/telemetria/9BFZZZ8F7NB000002: PUBACK Not authorized (recusado) (ACL por CN: o ingestor nao recebe nada)
+(exit 0)
+
+$ docker compose --profile demo run --rm simulador --modo payload-invalido
+[payload-invalido] campo_extra: PUBACK Success (broker entrega; o ingestor valida e recusa)
+[payload-invalido] odometro_negativo: PUBACK Success (broker entrega; o ingestor valida e recusa)
+[payload-invalido] dtc_injecao: PUBACK Success (broker entrega; o ingestor valida e recusa)
+[payload-invalido] relogio_futuro: PUBACK Success (broker entrega; o ingestor valida e recusa)
+[payload-invalido] payload_grande: PUBACK Success
+(exit 0)
+
+$ docker compose --profile demo run --rm simulador --modo odometro-regressivo
+[odometro-regressivo] 19401 -> 11401: PUBACK Success (ingestor deve recusar)
+(exit 0)
+
+---- log do mosquitto (recusas de handshake) ----
+2026-09-26T12:09:28: Client 172.25.0.4 [172.25.0.4:56483] disconnected: Protocol error.
+--
+2026-09-26T12:11:00: New connection from 172.25.0.4:36231 on port 8883.
+2026-09-26T12:11:00: OpenSSL Error while trying to get the error[0]: error:0A0000C7:SSL routines::peer did not return a certificate
+2026-09-26T12:11:00: Client 172.25.0.4 [172.25.0.4:36231] disconnected: Protocol error.
+2026-09-26T12:11:03: New connection from 172.25.0.4:42005 on port 8883.
+2026-09-26T12:11:03: OpenSSL Error while trying to get the error[0]: error:0A000086:SSL routines::certificate verify failed
+2026-09-26T12:11:03: Client 172.25.0.4 [172.25.0.4:42005] disconnected: Protocol error.
+
+---- log do ingestor (validacao) ----
+{"motivo": "odometro_regressivo", "detalhe": "47371 -> 33829", "vin": "9BFZZZ8F7NB000001", "security": true, "event": "iot.telemetria_rejeitada", "level": "warning", "timestamp": "2026-09-26T12:10:57.531077Z"}
+{"motivo": "odometro_regressivo", "detalhe": "47371 -> 34377", "vin": "9BFZZZ8F7NB000001", "security": true, "event": "iot.telemetria_rejeitada", "level": "warning", "timestamp": "2026-09-26T12:10:58.031943Z"}
+{"motivo": "schema", "detalhe": "comando", "vin": "9BFZZZ8F7NB000001", "security": true, "event": "iot.telemetria_rejeitada", "level": "info", "timestamp": "2026-09-26T12:11:10.163773Z"}
+{"motivo": "schema", "detalhe": "odometro_km", "vin": "9BFZZZ8F7NB000001", "security": true, "event": "iot.telemetria_rejeitada", "level": "info", "timestamp": "2026-09-26T12:11:10.165443Z"}
+{"motivo": "schema", "detalhe": "codigos_falha", "vin": "9BFZZZ8F7NB000001", "security": true, "event": "iot.telemetria_rejeitada", "level": "info", "timestamp": "2026-09-26T12:11:10.167209Z"}
+{"motivo": "relogio", "detalhe": "2031-01-01T00:00:00+00:00", "vin": "9BFZZZ8F7NB000001", "security": true, "event": "iot.telemetria_rejeitada", "level": "info", "timestamp": "2026-09-26T12:11:10.168690Z"}
+{"motivo": "payload_grande", "detalhe": "3000 bytes", "vin": "9BFZZZ8F7NB000001", "security": true, "event": "iot.telemetria_rejeitada", "level": "info", "timestamp": "2026-09-26T12:11:10.169888Z"}
+{"motivo": "odometro_regressivo", "detalhe": "47371 -> 19401", "vin": "9BFZZZ8F7NB000001", "security": true, "event": "iot.telemetria_rejeitada", "level": "warning", "timestamp": "2026-09-26T12:11:12.913866Z"}
+{"motivo": "odometro_regressivo", "detalhe": "47371 -> 11401", "vin": "9BFZZZ8F7NB000001", "security": true, "event": "iot.telemetria_rejeitada", "level": "warning", "timestamp": "2026-09-26T12:11:13.414465Z"}

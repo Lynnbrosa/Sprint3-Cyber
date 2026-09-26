@@ -1,0 +1,37 @@
+$ docker compose exec api python -m app.cli.auditoria_permissoes --dias-inativo 90
+# Auditoria de permissões — 2026-09-26 12:26 UTC
+
+Janela de inatividade: 90 dias. Usuários: 3.
+
+| Usuário | Papel | Último login | Sessões ativas | 403 no período | Situação |
+|---|---|---|---|---|---|
+| admin@ford.com | admin | 2026-09-26 | 1 | 0 | ok |
+| analista@ford.com | analista | 2026-09-26 | 1 | 0 | ok |
+| consultor@ford.com | consultor | 2026-09-26 | 0 | 18 | tentou acesso fora do papel |
+
+Administradores: 1 (limite 3).
+
+## Pendências
+
+- consultor@ford.com: tentou acesso fora do papel
+
+(o comando sai com codigo 1 quando existe pendencia, o que permite agendar e alertar)
+
+$ BACKUP_PASSPHRASE=*** ./scripts/backup.sh backups
+backup ok: backups/previopls-20260926T122611Z.dump.enc (48K)
+
+  total 49
+  -rw-r--r-- 1 User 197121 48848 Sep 26 09:26 previopls-20260926T122611Z.dump.enc
+  -rw-r--r-- 1 User 197121   110 Sep 26 09:26 previopls-20260926T122611Z.dump.enc.sha256
+
+$ head -c 16 backups/previopls-20260926T122611Z.dump.enc | xxd   # arquivo cifrado (cabecalho Salted__ do openssl)
+00000000: 5361 6c74 6564 5f5f 62a3 8c89 f0b6 25b9  Salted__b.....%.
+
+$ BACKUP_PASSPHRASE=*** ./scripts/restore_test.sh backups/previopls-20260926T122611Z.dump.enc
+backups/previopls-20260926T122611Z.dump.enc: OK
+usuarios: producao=3 restaurado=3
+clientes: producao=30 restaurado=30
+leads: producao=8 restaurado=8
+audit_logs: producao=84 restaurado=84
+telemetria: producao=17 restaurado=17
+restauracao ok em restore_teste_1790425572 (removido ao sair)

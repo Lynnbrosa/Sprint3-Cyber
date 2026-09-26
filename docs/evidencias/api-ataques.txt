@@ -1,0 +1,89 @@
+ Container cyber3-db-1 Running 
+ Container cyber3-certgen-1 Recreate 
+ Container cyber3-certgen-1 Recreated 
+ Container cyber3-api-1 Recreate 
+ Container cyber3-api-1 Recreated 
+ Container cyber3-nginx-1 Running 
+ Container cyber3-certgen-1 Starting 
+ Container cyber3-certgen-1 Started 
+ Container cyber3-db-1 Waiting 
+ Container cyber3-certgen-1 Waiting 
+ Container cyber3-certgen-1 Exited 
+ Container cyber3-db-1 Healthy 
+ Container cyber3-api-1 Starting 
+ Container cyber3-api-1 Started 
+ Container cyber3-api-1 Waiting 
+ Container cyber3-api-1 Healthy 
+ Container cyber3-trafego-run-a565a15798c3 Creating 
+ Container cyber3-trafego-run-a565a15798c3 Created 
+[normal] 30/30 cadastros assinados aceitos (classificacao D0 + lead)
+[normal] consultor abriu e atualizou 8 leads
+[normal] analista consultou a trilha de auditoria
+[forca-bruta] rajada de 10 no admin: [422, 429, 429, 429, 429, 429, 429, 429, 429, 429] (429 = nginx/slowapi)
+[forca-bruta] lenta (13 tentativas): [('admin', 401, 'Credenciais inválidas'), ('admin', 401, 'Credenciais inválidas'), ('admin', 401, 'Credenciais inválidas'), ('admin', 401, 'Credenciais inválidas'), ('admin', 401, 'Credenciais inválidas'), ('admin', 401, 'Conta temporariamente bl'), ('consultor', 401, 'Credenciais inválidas'), ('analista', 401, 'Credenciais inválidas'), ('gerente', 401, 'Credenciais inválidas'), ('ti', 401, 'Credenciais inválidas'), ('financeiro', 401, 'Credenciais inválidas'), ('suporte', 401, 'Credenciais inválidas'), ('rh', 401, 'Credenciais inválidas')]
+[xff-forjado] 130 requisicoes com X-Forwarded-For diferente: 109 barradas com 429
+[rbac] consultor tentando rotas de admin: [403, 403, 403, 403, 403, 403, 403, 403, 403]
+[jwt] 24 tokens forjados/errados: [401, 429]
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/app/app/ops/demo_trafego.py", line 189, in <module>
+    main()
+  File "/app/app/ops/demo_trafego.py", line 185, in main
+    ataques()
+  File "/app/app/ops/demo_trafego.py", line 145, in ataques
+    novo = c.post("/v1/auth/refresh", json={"refresh_token": vitima["refresh_token"]}).json()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/venv/lib/python3.12/site-packages/httpx/_models.py", line 832, in json
+    return jsonlib.loads(self.content, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/json/decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/json/decoder.py", line 356, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+exit=1
+
+---- retomada a partir da fase 3 (a execucao acima parou no passo 5: o nginx devolvia 429 em HTML e o script esperava JSON; corrigido com error_page JSON no nginx) ----
+[rbac] consultor tentando rotas de admin: [403, 403, 403, 403, 403, 403, 403, 403, 403]
+[jwt] 24 tokens forjados/errados: [401]
+[sessao] reuso do refresh antigo: 401; refresh legitimo depois disso: 401
+exit=1
+12:29:14
+ Container cyber3-db-1 Running 
+ Container cyber3-api-1 Running 
+ Container cyber3-nginx-1 Running 
+ Container cyber3-certgen-1 Starting 
+ Container cyber3-certgen-1 Started 
+ Container cyber3-certgen-1 Waiting 
+ Container cyber3-db-1 Waiting 
+ Container cyber3-certgen-1 Exited 
+ Container cyber3-db-1 Healthy 
+ Container cyber3-api-1 Waiting 
+ Container cyber3-api-1 Healthy 
+ Container cyber3-trafego-run-5ca324282474 Creating 
+ Container cyber3-trafego-run-5ca324282474 Created 
+[rbac] consultor tentando rotas de admin: [403, 403, 403, 403, 403, 403, 403, 403, 403]
+[jwt] 24 tokens forjados/errados: [401]
+[sessao] reuso do refresh antigo: 401; refresh legitimo depois disso: 401
+[hmac] original 201; replay 401; corpo adulterado 401; timestamp velho 401; sem assinatura 401
+[exfiltracao] 60 listagens de leads em sequencia: 60 ok, 0 barradas
+[entrada] SQLi no filtro: 422; campo extra no cadastro: 422
+exit=0
+
+---- segunda rodada (depois de inicializar as series de metrica com zero), 12:40:00 UTC ----
+[normal] 15/15 cadastros assinados aceitos (classificacao D0 + lead)
+[normal] consultor abriu e atualizou 8 leads
+[normal] analista consultou a trilha de auditoria
+exit=0
+[rbac] consultor tentando rotas de admin: [403, 403, 403, 403, 403, 403, 403, 403, 403]
+[jwt] 24 tokens forjados/errados: [401]
+[sessao] reuso do refresh antigo: 401; refresh legitimo depois disso: 401
+[hmac] original 201; replay 401; corpo adulterado 401; timestamp velho 401; sem assinatura 401
+[exfiltracao] 60 listagens de leads em sequencia: 60 ok, 0 barradas
+[entrada] SQLi no filtro: 422; campo extra no cadastro: 422

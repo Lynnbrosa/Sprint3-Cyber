@@ -1,0 +1,108 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1180 700' width='1180' height='700' font-family='Segoe UI, Helvetica, Arial, sans-serif'>
+<defs><marker id='seta' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='7' markerHeight='7' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#1f2937'/></marker><marker id='setac' viewBox='0 0 10 10' refX='9' refY='5' markerWidth='7' markerHeight='7' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#6b7280'/></marker></defs>
+<rect width='1180' height='700' fill='#ffffff'/>
+<text x='24' y='34' font-size='19' font-weight='700' fill='#1f2937'>PrevioPLS · arquitetura e fronteiras de confiança</text>
+<rect x='20' y='56' width='250' height='470' rx='10' fill='#fef2f2' stroke='#b91c1c' stroke-dasharray='6 4'/>
+<text x='32' y='76' font-size='12' font-weight='700' fill='#b91c1c' letter-spacing='0.5'>EXTERNO · NÃO CONFIÁVEL</text>
+<rect x='300' y='56' width='250' height='470' rx='10' fill='#fff7ed' stroke='#c2410c' stroke-dasharray='6 4'/>
+<text x='312' y='76' font-size='12' font-weight='700' fill='#c2410c' letter-spacing='0.5'>BORDA · TLS TERMINA AQUI</text>
+<rect x='580' y='56' width='300' height='470' rx='10' fill='#eff6ff' stroke='#1d4ed8' stroke-dasharray='6 4'/>
+<text x='592' y='76' font-size='12' font-weight='700' fill='#1d4ed8' letter-spacing='0.5'>REDE INTERNA (BACKEND: INTERNAL)</text>
+<rect x='910' y='56' width='250' height='470' rx='10' fill='#f0fdf4' stroke='#15803d' stroke-dasharray='6 4'/>
+<text x='922' y='76' font-size='12' font-weight='700' fill='#15803d' letter-spacing='0.5'>DADOS</text>
+<rect x='40' y='90' width='210' height='64' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
+<text x='145.0' y='111' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>App do consultor</text>
+<text x='145.0' y='129' font-size='11' text-anchor='middle' fill='#6b7280'>Expo · React Native</text>
+<text x='145.0' y='144' font-size='11' text-anchor='middle' fill='#6b7280'>JWT no SecureStore</text>
+<rect x='40' y='180' width='210' height='64' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
+<text x='145.0' y='201' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Painel de gestão</text>
+<text x='145.0' y='219' font-size='11' text-anchor='middle' fill='#6b7280'>Next.js · cookie Secure</text>
+<rect x='40' y='270' width='210' height='64' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
+<text x='145.0' y='291' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Faturamento Ford</text>
+<text x='145.0' y='309' font-size='11' text-anchor='middle' fill='#6b7280'>webhook D0 · HMAC-SHA256</text>
+<rect x='40' y='400' width='210' height='64' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
+<text x='145.0' y='421' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Veículo conectado</text>
+<text x='145.0' y='439' font-size='11' text-anchor='middle' fill='#6b7280'>módulo telemático</text>
+<text x='145.0' y='454' font-size='11' text-anchor='middle' fill='#6b7280'>certificado X.509 do VIN</text>
+<rect x='320' y='170' width='210' height='94' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
+<text x='425.0' y='191' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>nginx (uid 101)</text>
+<text x='425.0' y='209' font-size='11' text-anchor='middle' fill='#6b7280'>TLS 1.2+/HSTS · headers OWASP</text>
+<text x='425.0' y='224' font-size='11' text-anchor='middle' fill='#6b7280'>rate limit por IP real</text>
+<text x='425.0' y='239' font-size='11' text-anchor='middle' fill='#6b7280'>XFF sobrescrito · /metrics 404</text>
+<rect x='320' y='392' width='210' height='80' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
+<text x='425.0' y='413' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Mosquitto 8883</text>
+<text x='425.0' y='431' font-size='11' text-anchor='middle' fill='#6b7280'>mTLS obrigatório</text>
+<text x='425.0' y='446' font-size='11' text-anchor='middle' fill='#6b7280'>ACL: VIN só no próprio tópico</text>
+<rect x='600' y='90' width='260' height='108' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
+<text x='730.0' y='111' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>API de segurança (FastAPI)</text>
+<text x='730.0' y='129' font-size='11' text-anchor='middle' fill='#6b7280'>JWT RS256 · kid · denylist · reuso</text>
+<text x='730.0' y='144' font-size='11' text-anchor='middle' fill='#6b7280'>RBAC consultor/analista/admin</text>
+<text x='730.0' y='159' font-size='11' text-anchor='middle' fill='#6b7280'>HMAC anti-replay · lockout</text>
+<text x='730.0' y='174' font-size='11' text-anchor='middle' fill='#6b7280'>trilha de auditoria + métricas</text>
+<rect x='600' y='392' width='260' height='80' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
+<text x='730.0' y='413' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Ingestor de telemetria</text>
+<text x='730.0' y='431' font-size='11' text-anchor='middle' fill='#6b7280'>schema fechado · odômetro</text>
+<text x='730.0' y='446' font-size='11' text-anchor='middle' fill='#6b7280'>posição ~1 km (LGPD)</text>
+<rect x='600' y='230' width='125' height='64' rx='7' fill='#ffffff' stroke='#6b7280' stroke-width='1.6' stroke-dasharray='5 3'/>
+<text x='662.5' y='251' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Core de domínio</text>
+<text x='662.5' y='269' font-size='11' text-anchor='middle' fill='#6b7280'>Spring Boot</text>
+<text x='662.5' y='284' font-size='11' text-anchor='middle' fill='#6b7280'>(monorepo)</text>
+<rect x='735' y='230' width='125' height='64' rx='7' fill='#ffffff' stroke='#6b7280' stroke-width='1.6' stroke-dasharray='5 3'/>
+<text x='797.5' y='251' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>ml-api</text>
+<text x='797.5' y='269' font-size='11' text-anchor='middle' fill='#6b7280'>classificador D0</text>
+<text x='797.5' y='284' font-size='11' text-anchor='middle' fill='#6b7280'>(monorepo)</text>
+<rect x='930' y='150' width='210' height='94' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
+<text x='1035.0' y='171' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>PostgreSQL 16</text>
+<text x='1035.0' y='189' font-size='11' text-anchor='middle' fill='#6b7280'>CPF/e-mail/telefone: Fernet</text>
+<text x='1035.0' y='204' font-size='11' text-anchor='middle' fill='#6b7280'>cpf_hash HMAC p/ busca</text>
+<text x='1035.0' y='219' font-size='11' text-anchor='middle' fill='#6b7280'>audit_logs 5 anos</text>
+<rect x='930' y='300' width='210' height='64' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
+<text x='1035.0' y='321' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Backup diário</text>
+<text x='1035.0' y='339' font-size='11' text-anchor='middle' fill='#6b7280'>AES-256 + sha256</text>
+<text x='1035.0' y='354' font-size='11' text-anchor='middle' fill='#6b7280'>teste de restauração mensal</text>
+<line x1='250' y1='122' x2='320' y2='195' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
+<text x='277.0' y='152.5' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>HTTPS + JWT</text>
+<line x1='250' y1='212' x2='320' y2='217' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
+<text x='285.0' y='208.5' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>HTTPS + JWT</text>
+<line x1='250' y1='302' x2='320' y2='240' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
+<text x='279.0' y='285.0' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>HTTPS + HMAC</text>
+<line x1='250' y1='432' x2='320' y2='432' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
+<text x='285.0' y='424.0' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>MQTT/TLS + cert</text>
+<line x1='530' y1='205' x2='600' y2='150' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
+<text x='565.0' y='173.5' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>rede edge</text>
+<line x1='530' y1='432' x2='600' y2='432' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
+<line x1='860' y1='132' x2='930' y2='185' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
+<text x='895.0' y='154.5' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>SQL (scram)</text>
+<path d='M860,432 Q900,360 930,225' fill='none' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
+<text x='897.5' y='342.25' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>SQL</text>
+<line x1='730' y1='198' x2='665' y2='230' stroke='#6b7280' stroke-width='1.5' stroke-dasharray='5 4' marker-end='url(#setac)'/>
+<line x1='760' y1='198' x2='797' y2='230' stroke='#6b7280' stroke-width='1.5' stroke-dasharray='5 4' marker-end='url(#setac)'/>
+<line x1='1035' y1='244' x2='1035' y2='300' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
+<text x='1083.0' y='276.0' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>pg_dump cifrado</text>
+<rect x='20' y='548' width='1140' height='132' rx='10' fill='#f5f3ff' stroke='#6d28d9' stroke-dasharray='6 4'/>
+<text x='32' y='568' font-size='12' font-weight='700' fill='#6d28d9' letter-spacing='0.5'>OBSERVABILIDADE E RESPOSTA (REDE OBSERVABILITY)</text>
+<rect x='40' y='584' width='190' height='72' rx='7' fill='#ffffff' stroke='#6d28d9' stroke-width='1.6'/>
+<text x='135.0' y='605' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Promtail → Loki</text>
+<text x='135.0' y='623' font-size='11' text-anchor='middle' fill='#6b7280'>logs JSON em volume ro</text>
+<text x='135.0' y='638' font-size='11' text-anchor='middle' fill='#6b7280'>sem docker.sock</text>
+<rect x='260' y='584' width='190' height='72' rx='7' fill='#ffffff' stroke='#6d28d9' stroke-width='1.6'/>
+<text x='355.0' y='605' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Prometheus</text>
+<text x='355.0' y='623' font-size='11' text-anchor='middle' fill='#6b7280'>/metrics com Bearer</text>
+<text x='355.0' y='638' font-size='11' text-anchor='middle' fill='#6b7280'>17 regras de alerta</text>
+<rect x='480' y='584' width='190' height='72' rx='7' fill='#ffffff' stroke='#6d28d9' stroke-width='1.6'/>
+<text x='575.0' y='605' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Alertmanager</text>
+<text x='575.0' y='623' font-size='11' text-anchor='middle' fill='#6b7280'>agrupa · roteia</text>
+<text x='575.0' y='638' font-size='11' text-anchor='middle' fill='#6b7280'>crítico sem espera</text>
+<rect x='700' y='584' width='190' height='72' rx='7' fill='#ffffff' stroke='#6d28d9' stroke-width='1.6'/>
+<text x='795.0' y='605' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>alert-sink</text>
+<text x='795.0' y='623' font-size='11' text-anchor='middle' fill='#6b7280'>registra incidente</text>
+<text x='795.0' y='638' font-size='11' text-anchor='middle' fill='#6b7280'>(Teams/PagerDuty em prod)</text>
+<rect x='920' y='584' width='220' height='72' rx='7' fill='#ffffff' stroke='#6d28d9' stroke-width='1.6'/>
+<text x='1030.0' y='605' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Grafana (127.0.0.1)</text>
+<text x='1030.0' y='623' font-size='11' text-anchor='middle' fill='#6b7280'>SOC · Operação</text>
+<text x='1030.0' y='638' font-size='11' text-anchor='middle' fill='#6b7280'>Prometheus + Loki + AM</text>
+<line x1='450' y1='620' x2='480' y2='620' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
+<line x1='670' y1='620' x2='700' y2='620' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
+<path d='M730,198 Q560,520 355,584' fill='none' stroke='#6b7280' stroke-width='1.5' stroke-dasharray='5 4' marker-end='url(#setac)'/>
+<text x='591.25' y='453.5' font-size='10.5' text-anchor='middle' fill='#6b7280' paint-order='stroke' stroke='#ffffff' stroke-width='4'>métricas e logs</text>
+</svg>

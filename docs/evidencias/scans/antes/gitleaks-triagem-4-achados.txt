@@ -1,0 +1,59 @@
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+Finding:     METRICS_TOKEN=
+              REDACTED
+Secret:      REDACTED
+RuleID:      segredo-hmac-ou-pepper
+Entropy:     3.584012
+File:        .env.example
+Line:        56
+Commit:      4aee75d123830ea28bd87d9c98df2cad748ee5a8
+Author:      Lynn Bueno Rosa
+Email:       Cbueno538@yahoo.com
+Date:        2026-09-26T12:11:48Z
+Fingerprint: 4aee75d123830ea28bd87d9c98df2cad748ee5a8:.env.example:segredo-hmac-ou-pepper:56
+
+Finding:     falsos = ["REDACTED", "lixo", consultor[...
+Secret:      REDACTED
+RuleID:      jwt
+Entropy:     4.632812
+File:        app/ops/demo_trafego.py
+Line:        139
+Commit:      8798e646c4486f018d8a18ef2226ec124eaf6495
+Author:      Lynn Bueno Rosa
+Email:       Cbueno538@yahoo.com
+Date:        2026-09-26T12:11:49Z
+Fingerprint: 8798e646c4486f018d8a18ef2226ec124eaf6495:app/ops/demo_trafego.py:jwt:139
+
+Finding:     CPF_HASH_PEPPER=REDACTED
+Secret:      REDACTED
+RuleID:      segredo-hmac-ou-pepper
+Entropy:     3.952383
+File:        .env.example
+Line:        31
+Commit:      acead24d7d2e44d119ffb261874fceb8385988bd
+Author:      Lynn Bueno Rosa
+Email:       Cbueno538@yahoo.com
+Date:        2026-09-26T04:47:21Z
+Fingerprint: acead24d7d2e44d119ffb261874fceb8385988bd:.env.example:segredo-hmac-ou-pepper:31
+
+Finding:     HMAC_PAYLOAD_SECRET=REDACTED
+Secret:      REDACTED
+RuleID:      segredo-hmac-ou-pepper
+Entropy:     4.019620
+File:        .env.example
+Line:        34
+Commit:      acead24d7d2e44d119ffb261874fceb8385988bd
+Author:      Lynn Bueno Rosa
+Email:       Cbueno538@yahoo.com
+Date:        2026-09-26T04:47:21Z
+Fingerprint: acead24d7d2e44d119ffb261874fceb8385988bd:.env.example:segredo-hmac-ou-pepper:34
+
+9:14AM INF 15 commits scanned.
+9:14AM INF scanned ~332477 bytes (332.48 KB) in 218ms
+9:14AM WRN leaks found: 4

@@ -1,0 +1,5 @@
+│ Scan Summary │
+ • Findings: 0 (0 blocking)
+ • Rules run: 227
+ • Targets scanned: 60
+Ran 227 rules on 60 files: 0 findings.

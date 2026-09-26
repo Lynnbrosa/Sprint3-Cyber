@@ -1,3 +1,6 @@
+> **Sprint 2** — mantido como histórico. A revisão final dos riscos (STRIDE + DevSecOps) está na
+> seção 4.1 de [`docs/SPRINT3-CYBERSECURITY.md`](docs/SPRINT3-CYBERSECURITY.md).
+
 # Threat Model — PrevioPLS Security API
 
 Aplicação do framework **STRIDE** (Microsoft) ao sistema:

@@ -1,0 +1,241 @@
+Run started:2026-09-26 12:14:50.068662+00:00
+
+Test results:
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\iot\simulador.py:46:26
+45	        "odometro_km": km,
+46	        "velocidade_kmh": random.randint(0, 110),
+47	        "combustivel_pct": random.randint(10, 100),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\iot\simulador.py:47:27
+46	        "velocidade_kmh": random.randint(0, 110),
+47	        "combustivel_pct": random.randint(10, 100),
+48	        "codigos_falha": random.choice([[], [], [], ["P0420"], ["P0301", "P0171"]]),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\iot\simulador.py:48:25
+47	        "combustivel_pct": random.randint(10, 100),
+48	        "codigos_falha": random.choice([[], [], [], ["P0420"], ["P0301", "P0171"]]),
+49	        "lat": -23.5613 + random.uniform(-0.05, 0.05),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\iot\simulador.py:49:26
+48	        "codigos_falha": random.choice([[], [], [], ["P0420"], ["P0301", "P0171"]]),
+49	        "lat": -23.5613 + random.uniform(-0.05, 0.05),
+50	        "lon": -46.6565 + random.uniform(-0.05, 0.05),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\iot\simulador.py:50:26
+49	        "lat": -23.5613 + random.uniform(-0.05, 0.05),
+50	        "lon": -46.6565 + random.uniform(-0.05, 0.05),
+51	    }
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\iot\simulador.py:125:9
+124	        return 1
+125	    km = random.randint(12_000, 60_000)
+126	    try:
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\iot\simulador.py:151:22
+150	            for i in range(a.n):
+151	                km += random.randint(5, 900)
+152	                r = _publicar(c, estado, f"ford/telemetria/{a.vin}", json.dumps(_leitura(a.vin, km)).encode())
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'TOKEN_REFRESHED'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html
+   Location: app\models\audit_log.py:16:22
+15	    LOGOUT = "LOGOUT"
+16	    TOKEN_REFRESHED = "TOKEN_REFRESHED"
+17	    CLIENTE_CREATED = "CLIENTE_CREATED"
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:50:12
+49	def _cpf() -> str:
+50	    base = [random.randint(0, 9) for _ in range(9)]
+51	    for _ in range(2):
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:58:21
+57	def _novo_cliente() -> dict:
+58	    modelo, versao = random.choice(MODELOS)
+59	    return {
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:60:16
+59	    return {
+60	        "nome": random.choice(["Ana", "Bruno", "Carla", "Diego", "Elisa", "Fabio", "Gabi", "Hugo"]) + " " +
+61	                random.choice(["Souza", "Lima", "Alves", "Rocha", "Nunes", "Prado"]),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:61:16
+60	        "nome": random.choice(["Ana", "Bruno", "Carla", "Diego", "Elisa", "Fabio", "Gabi", "Hugo"]) + " " +
+61	                random.choice(["Souza", "Lima", "Alves", "Rocha", "Nunes", "Prado"]),
+62	        "cpf": _cpf(),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:63:25
+62	        "cpf": _cpf(),
+63	        "email": "".join(random.choices(string.ascii_lowercase, k=8)) + "@example.com",
+64	        "telefone": f"+55119{random.randint(10000000, 99999999)}",
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:64:29
+63	        "email": "".join(random.choices(string.ascii_lowercase, k=8)) + "@example.com",
+64	        "telefone": f"+55119{random.randint(10000000, 99999999)}",
+65	        "regiao": random.choice(REGIOES),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:65:18
+64	        "telefone": f"+55119{random.randint(10000000, 99999999)}",
+65	        "regiao": random.choice(REGIOES),
+66	        "veiculo": {
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:67:55
+66	        "veiculo": {
+67	            "modelo": modelo, "versao": versao, "ano": random.choice([2025, 2026]),
+68	            "vin": "9BF" + "".join(random.choices(VIN_CHARS, k=14)),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:68:35
+67	            "modelo": modelo, "versao": versao, "ano": random.choice([2025, 2026]),
+68	            "vin": "9BF" + "".join(random.choices(VIN_CHARS, k=14)),
+69	            "data_compra": "2026-09-2" + str(random.randint(0, 5)),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:69:45
+68	            "vin": "9BF" + "".join(random.choices(VIN_CHARS, k=14)),
+69	            "data_compra": "2026-09-2" + str(random.randint(0, 5)),
+70	            "valor_compra": f"{random.randint(180, 520)}000.00",
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:70:31
+69	            "data_compra": "2026-09-2" + str(random.randint(0, 5)),
+70	            "valor_compra": f"{random.randint(180, 520)}000.00",
+71	            "concessionaria_id": f"FORD-{random.choice(REGIOES)}-{random.randint(1, 40):03d}",
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:71:41
+70	            "valor_compra": f"{random.randint(180, 520)}000.00",
+71	            "concessionaria_id": f"FORD-{random.choice(REGIOES)}-{random.randint(1, 40):03d}",
+72	        },
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:71:66
+70	            "valor_compra": f"{random.randint(180, 520)}000.00",
+71	            "concessionaria_id": f"FORD-{random.choice(REGIOES)}-{random.randint(1, 40):03d}",
+72	        },
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random
+   Location: app\ops\demo_trafego.py:99:36
+98	            c.patch(f"/v1/leads/{item['id']}", headers=_h(consultor),
+99	                    json={"status": random.choice(["agendado", "sem-contato"]), "observacao": "contato pelo app"})
+100	            time.sleep(0.2)
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 3052
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 2
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 22
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 1
+		High: 21
+Files skipped (0):
