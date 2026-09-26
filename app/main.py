@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, Request
@@ -12,11 +13,32 @@ from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
 from app.core.middleware import RequestIdMiddleware, SecurityHeadersMiddleware
 from app.core.ratelimit import limiter
-from app.db.session import engine
+from app.core.security import ensure_jwt_keys
+from app.db.session import SessionLocal, engine
 
 
 configure_logging()
 log = get_logger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    settings = get_settings()
+    ensure_jwt_keys()
+
+    from app.db.seed import bootstrap_admin, seed_default_users
+
+    try:
+        with SessionLocal() as db:
+            bootstrap_admin(db)
+            if settings.should_seed_default_users:
+                criados = seed_default_users(db)
+                log.warning("seed.demo_users", created=criados, hint="desligue com SEED_DEFAULT_USERS=false")
+    except Exception as exc:  # sem banco a api sobe e o /health mostra degraded
+        log.error("seed.failed", error=type(exc).__name__)
+
+    log.info("app.started", env=settings.app_env, version=settings.app_version)
+    yield
 
 
 def create_app() -> FastAPI:
@@ -25,6 +47,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="PrevioPLS Security API",
         version=settings.app_version,
+        lifespan=lifespan,
         docs_url="/docs" if not settings.is_prod else None,
         redoc_url=None,
         openapi_url="/openapi.json" if not settings.is_prod else None,
@@ -83,7 +106,6 @@ def create_app() -> FastAPI:
             "build_time": datetime.now(timezone.utc).isoformat(),
         }
 
-    log.info("app.started", env=settings.app_env, version=settings.app_version)
     return app
 
 

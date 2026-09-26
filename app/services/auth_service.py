@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.errors import UnauthorizedError
 from app.core.security import (
+    DUMMY_PASSWORD_HASH,
     Role,
     TokenType,
     create_access_token,
@@ -21,6 +22,10 @@ from app.services.audit_service import AuditService
 from app.services.lockout_service import LockoutService
 
 
+def normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+
 class AuthService:
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -29,12 +34,18 @@ class AuthService:
         self._settings = get_settings()
 
     def login(self, email: str, senha: str, request: Request) -> TokenPair:
+        # sem normalizar, "Admin@Ford.com" e "admin@ford.com" contavam lockout separado
+        email = normalize_email(email)
+
         if self.lockout.is_locked(email):
             self.audit.log_event(action=AuditAction.LOGIN_LOCKED, request=request, actor_email=email)
+            # quem levanta excecao nao passa pelo db.commit() da rota, a trilha sumia no rollback
+            self.db.commit()
             raise UnauthorizedError("Conta temporariamente bloqueada. Tente novamente em alguns minutos.")
 
         usuario = self.db.scalar(select(Usuario).where(Usuario.email == email))
-        ok = usuario is not None and verify_password(senha, usuario.senha_hash)
+        # usuario inexistente tambem paga o bcrypt, senao o tempo de resposta entrega quem existe
+        ok = verify_password(senha, usuario.senha_hash if usuario else DUMMY_PASSWORD_HASH) and usuario is not None
 
         self.lockout.record(email, success=ok, request=request)
 
@@ -46,6 +57,8 @@ class AuthService:
                 details="usuario_inexistente" if usuario is None else "senha_invalida",
             )
             maybe_alert_login_brute_force(email, self.audit, request)
+            # mesmo motivo do lockout: sem commit a falha nunca contava pro bloqueio
+            self.db.commit()
             raise UnauthorizedError("Credenciais inválidas")
 
         role = Role(usuario.papel.value)
@@ -74,7 +87,6 @@ class AuthService:
     def refresh(self, refresh_token: str, request: Request) -> TokenPair:
         payload = decode_token(refresh_token, expected_type=TokenType.REFRESH)
         jti = payload["jti"]
-        usuario_id = payload["sub"]
 
         stored = self.db.scalar(select(RefreshToken).where(RefreshToken.jti == jti))
         if stored is None or stored.revoked or stored.expires_at <= datetime.now(timezone.utc):
@@ -83,6 +95,7 @@ class AuthService:
                 request=request,
                 details="refresh_token_invalid_or_revoked",
             )
+            self.db.commit()
             raise UnauthorizedError("Refresh token inválido ou revogado")
 
         # Rotação: revoga o token usado, emite par novo.

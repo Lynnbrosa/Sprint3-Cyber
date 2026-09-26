@@ -44,6 +44,17 @@ class Settings(BaseSettings):
 
     security_alert_webhook_url: str = ""
 
+    # usuarios de demo: so fora de producao; as senhas vem do .env, nunca do codigo
+    seed_default_users: bool | None = None
+    seed_admin_password: str = ""
+    seed_consultor_password: str = ""
+    seed_analista_password: str = ""
+
+    # primeiro admin de producao (criado no boot se nao existir)
+    bootstrap_admin_email: str = ""
+    bootstrap_admin_password: str = ""
+    bootstrap_admin_name: str = "Administrador"
+
     @field_validator("cors_origins")
     @classmethod
     def _validate_origins(cls, v: str) -> str:
@@ -58,6 +69,12 @@ class Settings(BaseSettings):
     @property
     def is_prod(self) -> bool:
         return self.app_env.lower() == "production"
+
+    @property
+    def should_seed_default_users(self) -> bool:
+        if self.seed_default_users is None:
+            return not self.is_prod
+        return self.seed_default_users and not self.is_prod
 
 
 @lru_cache
