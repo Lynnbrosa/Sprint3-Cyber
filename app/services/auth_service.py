@@ -1,13 +1,15 @@
 from datetime import datetime, timezone
+from uuid import UUID
 
 from fastapi import Request
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.errors import UnauthorizedError
 from app.core.security import (
     DUMMY_PASSWORD_HASH,
+    Principal,
     Role,
     TokenType,
     create_access_token,
@@ -15,9 +17,9 @@ from app.core.security import (
     decode_token,
     verify_password,
 )
-from app.models import AuditAction, RefreshToken, Usuario
+from app.models import AuditAction, RefreshToken, RevokedToken, Usuario
 from app.schemas.auth import TokenPair
-from app.services.alert_service import maybe_alert_login_brute_force
+from app.services.alert_service import maybe_alert_login_brute_force, notify_webhook
 from app.services.audit_service import AuditService
 from app.services.lockout_service import LockoutService
 
@@ -89,7 +91,23 @@ class AuthService:
         jti = payload["jti"]
 
         stored = self.db.scalar(select(RefreshToken).where(RefreshToken.jti == jti))
-        if stored is None or stored.revoked or stored.expires_at <= datetime.now(timezone.utc):
+        if stored is not None and stored.revoked:
+            # refresh ja rotacionado voltando = alguem tem copia do token (o dono ou o ladrao).
+            # nao da pra saber qual, entao derruba a familia inteira (OAuth 2.0 BCP, reuse detection)
+            revogados = self.revoke_all_sessions(stored.usuario_id)
+            self.audit.log_event(
+                action=AuditAction.REFRESH_REUSE_DETECTED,
+                request=request,
+                actor_id=stored.usuario_id,
+                entity_type="Usuario",
+                entity_id=str(stored.usuario_id),
+                details=f"refresh reutilizado; {revogados} sessoes revogadas",
+            )
+            self.db.commit()
+            notify_webhook({"type": "refresh_reuse", "usuario_id": str(stored.usuario_id)})
+            raise UnauthorizedError("Refresh token inválido ou revogado")
+
+        if stored is None or stored.expires_at <= datetime.now(timezone.utc):
             self.audit.log_event(
                 action=AuditAction.UNAUTHORIZED_ACCESS,
                 request=request,
@@ -125,12 +143,30 @@ class AuthService:
             role=usuario.papel,
         )
 
-    def logout(self, refresh_token: str, request: Request) -> None:
+    def logout(self, refresh_token: str, principal: Principal, request: Request) -> None:
+        # o access continuava valendo ate o exp depois do logout; agora o jti vai pra denylist
+        exp = datetime.fromtimestamp(principal.exp, tz=timezone.utc) if principal.exp else datetime.now(timezone.utc)
+        if self.db.get(RevokedToken, principal.jti) is None:
+            self.db.add(RevokedToken(jti=principal.jti, expires_at=exp, motivo="logout"))
+
         try:
             payload = decode_token(refresh_token, expected_type=TokenType.REFRESH)
             stored = self.db.scalar(select(RefreshToken).where(RefreshToken.jti == payload["jti"]))
-            if stored and not stored.revoked:
+            # so revoga refresh do proprio usuario, senao dava pra deslogar os outros
+            if stored and not stored.revoked and str(stored.usuario_id) == principal.user_id:
                 stored.revoked = True
-        except Exception:
-            pass  # logout best-effort: token inválido também resulta em "logado fora"
+        except Exception:  # nosec B110 - logout best-effort: refresh invalido tambem resulta em "logado fora"
+            pass
         self.audit.log_event(action=AuditAction.LOGOUT, request=request)
+
+    def revoke_all_sessions(self, usuario_id: UUID) -> int:
+        """Kill switch da contencao: revoga todos os refresh e invalida todo access emitido ate agora."""
+        result = self.db.execute(
+            update(RefreshToken)
+            .where(RefreshToken.usuario_id == usuario_id, RefreshToken.revoked.is_(False))
+            .values(revoked=True)
+        )
+        usuario = self.db.get(Usuario, usuario_id)
+        if usuario is not None:
+            usuario.sessoes_revogadas_em = datetime.now(timezone.utc)
+        return result.rowcount or 0

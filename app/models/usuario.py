@@ -1,6 +1,6 @@
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Enum, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -23,4 +23,6 @@ class Usuario(Base):
     senha_hash = Column(String(255), nullable=False)
     papel = Column(Enum(RolePapel, name="role_papel", values_callable=lambda x: [e.value for e in x]),
                    nullable=False, default=RolePapel.CONSULTOR)
-    criado_em = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    criado_em = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    # kill switch da contencao: todo token emitido antes disso deixa de valer na hora
+    sessoes_revogadas_em = Column(DateTime(timezone=True), nullable=True)

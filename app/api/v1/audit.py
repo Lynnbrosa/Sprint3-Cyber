@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends, Query
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.security import Role, requires_role
+from app.core.errors import NotFoundError
+from app.core.security import Principal, Role, requires_role
 from app.db.session import get_db
-from app.models import AuditAction, AuditLog
+from app.models import AuditAction, AuditLog, Usuario
 from app.schemas.audit import AuditLogItem, AuditLogPage
 
 
@@ -53,3 +56,28 @@ def list_audit_log(
         per_page=per_page,
         total=total,
     )
+
+
+@router.post("/usuarios/{usuario_id}/revogar-sessoes")
+def revogar_sessoes(
+    usuario_id: UUID,
+    request: Request,
+    db: Session = Depends(get_db),
+    _: Principal = Depends(requires_role(Role.ADMIN)),
+) -> dict:
+    """Contencao de incidente: derruba todas as sessoes de uma conta suspeita na hora."""
+    from app.services.auth_service import AuthService
+
+    if db.get(Usuario, usuario_id) is None:
+        raise NotFoundError("Usuário não encontrado")
+    service = AuthService(db)
+    revogados = service.revoke_all_sessions(usuario_id)
+    service.audit.log_event(
+        action=AuditAction.SESSIONS_REVOKED,
+        request=request,
+        entity_type="Usuario",
+        entity_id=str(usuario_id),
+        details=f"{revogados} refresh tokens revogados",
+    )
+    db.commit()
+    return {"usuario_id": str(usuario_id), "refresh_revogados": revogados}

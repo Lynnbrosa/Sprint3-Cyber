@@ -89,7 +89,7 @@ def maybe_alert_mass_query(principal_id: Optional[str], audit: AuditService, req
 def alert_profile_change(cliente_id: str, old_perfil: str | None, new_perfil: str, audit: AuditService, request) -> None:
     log.warning("alert.profile_change", cliente_id=cliente_id, old=old_perfil, new=new_perfil)
     audit.log_event(
-        action=AuditAction.CLIENTE_CREATED,  # ou um novo PROFILE_CHANGED se preferir
+        action=AuditAction.PROFILE_CHANGED,  # antes gravava CLIENTE_CREATED e a mudanca de perfil sumia no meio dos cadastros
         request=request,
         entity_type="Cliente",
         entity_id=cliente_id,

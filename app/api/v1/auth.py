@@ -44,8 +44,8 @@ def logout(
     request: Request,
     payload: RefreshRequest,
     db: Session = Depends(get_db),
-    _: Principal = Depends(current_principal),
+    principal: Principal = Depends(current_principal),
 ):
     service = AuthService(db)
-    service.logout(payload.refresh_token, request)
+    service.logout(payload.refresh_token, principal, request)
     db.commit()

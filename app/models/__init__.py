@@ -5,6 +5,7 @@ from app.models.lead import Lead, PrioridadeLead, StatusLead
 from app.models.refresh_token import RefreshToken
 from app.models.audit_log import AuditLog, AuditAction
 from app.models.login_attempt import LoginAttempt
+from app.models.revoked_token import RevokedToken
 
 __all__ = [
     "Usuario", "RolePapel",
@@ -14,4 +15,5 @@ __all__ = [
     "RefreshToken",
     "AuditLog", "AuditAction",
     "LoginAttempt",
+    "RevokedToken",
 ]

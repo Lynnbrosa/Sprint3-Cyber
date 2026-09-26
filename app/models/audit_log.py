@@ -1,6 +1,6 @@
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Enum, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -22,6 +22,9 @@ class AuditAction(str, enum.Enum):
     FORBIDDEN_ACCESS = "FORBIDDEN_ACCESS"
     SIGNATURE_REJECTED = "SIGNATURE_REJECTED"
     MASS_QUERY_DETECTED = "MASS_QUERY_DETECTED"
+    REFRESH_REUSE_DETECTED = "REFRESH_REUSE_DETECTED"
+    SESSIONS_REVOKED = "SESSIONS_REVOKED"
+    PROFILE_CHANGED = "PROFILE_CHANGED"
 
 
 class AuditLog(Base):
@@ -41,4 +44,4 @@ class AuditLog(Base):
     remote_ip = Column(String(64), nullable=True)
     user_agent = Column(String(255), nullable=True)
     details = Column(Text, nullable=True)
-    occurred_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True)
+    occurred_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False, index=True)

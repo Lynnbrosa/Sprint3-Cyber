@@ -8,6 +8,7 @@ Camada de autenticação e autorização.
 """
 from __future__ import annotations
 
+import hashlib
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -18,6 +19,7 @@ import bcrypt
 import jwt
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -88,6 +90,21 @@ def _public_key() -> bytes:
     return get_settings().jwt_public_key_path.read_bytes()
 
 
+def _kid(public_pem: bytes) -> str:
+    return hashlib.sha256(public_pem).hexdigest()[:16]
+
+
+@lru_cache
+def _verification_keys() -> dict[str, bytes]:
+    """kid -> chave publica. A anterior fica aceita durante a janela de rotacao."""
+    keys = {_kid(_public_key()): _public_key()}
+    prev = get_settings().jwt_previous_public_key_path
+    if prev and prev.exists():
+        pem = prev.read_bytes()
+        keys[_kid(pem)] = pem
+    return keys
+
+
 # ---- Senhas ---------------------------------------------------------------
 
 def hash_password(plain: str) -> str:
@@ -127,7 +144,7 @@ def create_access_token(*, subject: str, role: Role, nome: str | None = None) ->
         "iat": int(now.timestamp()),
         "exp": int((now + timedelta(minutes=settings.jwt_access_ttl_minutes)).timestamp()),
     }
-    token = jwt.encode(payload, _private_key(), algorithm="RS256")
+    token = jwt.encode(payload, _private_key(), algorithm="RS256", headers={"kid": _kid(_public_key())})
     return token, jti
 
 
@@ -147,31 +164,41 @@ def create_refresh_token(*, subject: str, role: Role) -> tuple[str, str, datetim
         "iat": int(now.timestamp()),
         "exp": int(exp.timestamp()),
     }
-    token = jwt.encode(payload, _private_key(), algorithm="RS256")
+    token = jwt.encode(payload, _private_key(), algorithm="RS256", headers={"kid": _kid(_public_key())})
     return token, jti, exp
+
+
+def _unauthorized(msg: str) -> HTTPException:
+    return HTTPException(status.HTTP_401_UNAUTHORIZED, detail=msg,
+                         headers={"WWW-Authenticate": 'Bearer error="invalid_token"'})
 
 
 def decode_token(token: str, *, expected_type: TokenType) -> dict:
     settings = get_settings()
     try:
+        kid = jwt.get_unverified_header(token).get("kid")
+    except jwt.InvalidTokenError as e:
+        raise _unauthorized("Token inválido") from e
+    # kid desconhecido nem chega na verificacao: token de chave velha ou forjado
+    key = _verification_keys().get(kid or "")
+    if key is None:
+        raise _unauthorized("Token inválido")
+    try:
         payload = jwt.decode(
             token,
-            _public_key(),
+            key,
             algorithms=["RS256"],
             audience=settings.jwt_audience,
             issuer=settings.jwt_issuer,
             options={"require": ["exp", "iat", "iss", "aud", "sub", "jti", "type"]},
         )
     except jwt.ExpiredSignatureError as e:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Token expirado",
-                            headers={"WWW-Authenticate": 'Bearer error="invalid_token"'}) from e
+        raise _unauthorized("Token expirado") from e
     except jwt.InvalidTokenError as e:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Token inválido",
-                            headers={"WWW-Authenticate": 'Bearer error="invalid_token"'}) from e
+        raise _unauthorized("Token inválido") from e
 
     if payload.get("type") != expected_type.value:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Tipo de token inválido",
-                            headers={"WWW-Authenticate": 'Bearer error="invalid_token"'})
+        raise _unauthorized("Tipo de token inválido")
 
     return payload
 
@@ -214,8 +241,10 @@ _bearer = _Bearer(auto_error=True)
 def current_principal(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(_bearer),
+    db: Session = Depends(get_db),
 ) -> Principal:
     payload = decode_token(credentials.credentials, expected_type=TokenType.ACCESS)
+    ensure_not_revoked(db, payload)
     principal = Principal(
         user_id=payload["sub"],
         role=Role(payload["role"]),
@@ -226,6 +255,21 @@ def current_principal(
     # Propaga no request.state pra uso em middleware/audit
     request.state.principal = principal
     return principal
+
+
+def ensure_not_revoked(db: Session, payload: dict) -> None:
+    """Assinatura valida nao basta: o jti pode estar na denylist ou o usuario teve as sessoes cortadas."""
+    from app.models import RevokedToken, Usuario
+
+    if db.get(RevokedToken, payload["jti"]) is not None:
+        raise _unauthorized("Token revogado")
+    try:
+        user_id = uuid.UUID(payload["sub"])
+    except ValueError as e:
+        raise _unauthorized("Token inválido") from e
+    corte = db.scalar(select(Usuario.sessoes_revogadas_em).where(Usuario.id == user_id))
+    if corte is not None and payload["iat"] < int(corte.timestamp()):
+        raise _unauthorized("Sessão revogada")
 
 
 def requires_role(*allowed: Role):

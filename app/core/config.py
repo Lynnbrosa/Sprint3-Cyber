@@ -22,6 +22,8 @@ class Settings(BaseSettings):
 
     jwt_private_key_path: Path = Path("./keys/jwt_private.pem")
     jwt_public_key_path: Path = Path("./keys/jwt_public.pem")
+    # chave publica anterior, aceita so durante a rotacao (kid diferente)
+    jwt_previous_public_key_path: Path | None = None
     jwt_issuer: str = "previo-pls"
     jwt_audience: str = "previo-pls-clients"
     jwt_access_ttl_minutes: int = 15
