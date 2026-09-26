@@ -1,3 +1,4 @@
+import re
 import time
 import uuid
 
@@ -17,10 +18,13 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
     """Garante correlation ID por requisição; injeta em logs e header de resposta."""
 
     HEADER = "X-Request-Id"
+    # o id vem do cliente e vai pro log, pro header de resposta e pra auditoria:
+    # so tamanho nao bastava, dava pra mandar espaco, aspas e texto que finge ser outro campo
+    _VALID = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
 
     async def dispatch(self, request: Request, call_next):
         rid = request.headers.get(self.HEADER)
-        if not rid or len(rid) > 64:
+        if not rid or not self._VALID.match(rid):
             rid = uuid.uuid4().hex
 
         structlog.contextvars.clear_contextvars()

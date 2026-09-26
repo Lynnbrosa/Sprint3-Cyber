@@ -8,10 +8,18 @@ import structlog
 from app.core.config import get_settings
 
 
-_CPF_RE = re.compile(r"\b(\d{3})\d{5}(\d{3})\b")
+# 3 + 6 + 2: o padrao antigo (3+5+3) deixava 3 digitos finais a mostra e o teste da sprint 2 falhava
+_CPF_RE = re.compile(r"\b(\d{3})\d{6}(\d{2})\b")
 _EMAIL_RE = re.compile(r"\b([A-Za-z0-9._%+-])[A-Za-z0-9._%+-]*(@[A-Za-z0-9.-]+\.[A-Za-z]{2,})\b")
 _BEARER_RE = re.compile(r"(?i)(Bearer\s+)[A-Za-z0-9._\-+/=]+")
 _LONG_DIGITS_RE = re.compile(r"\b\d{13,19}\b")
+_JWT_RE = re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}")
+
+# campo com esse nome nunca vai pro log, nem mascarado
+_SENSITIVE_KEYS = {
+    "senha", "password", "passwd", "secret", "token", "access_token", "refresh_token",
+    "authorization", "cookie", "fernet_key", "hmac_payload_secret", "cpf_hash_pepper", "x-signature",
+}
 
 
 def _mask_string(value: str) -> str:
@@ -20,6 +28,7 @@ def _mask_string(value: str) -> str:
     value = _CPF_RE.sub(r"\1.***.***-\2", value)
     value = _EMAIL_RE.sub(r"\1***\2", value)
     value = _BEARER_RE.sub(r"\1***REDACTED***", value)
+    value = _JWT_RE.sub("***JWT***", value)
     value = _LONG_DIGITS_RE.sub(lambda m: "****" + m.group()[-4:], value)
     return value
 
@@ -28,7 +37,10 @@ def _walk_and_mask(obj: Any) -> Any:
     if isinstance(obj, str):
         return _mask_string(obj)
     if isinstance(obj, dict):
-        return {k: _walk_and_mask(v) for k, v in obj.items()}
+        return {
+            k: "***REDACTED***" if isinstance(k, str) and k.lower() in _SENSITIVE_KEYS else _walk_and_mask(v)
+            for k, v in obj.items()
+        }
     if isinstance(obj, (list, tuple)):
         return type(obj)(_walk_and_mask(v) for v in obj)
     return obj
