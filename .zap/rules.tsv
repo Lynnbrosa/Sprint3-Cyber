@@ -1,0 +1,9 @@
+# id	acao	(regra) -- FAIL quebra o pipeline
+10020	FAIL	(X-Frame-Options ausente)
+10021	FAIL	(X-Content-Type-Options ausente)
+10035	FAIL	(Strict-Transport-Security ausente)
+10038	FAIL	(Content-Security-Policy ausente)
+10036	FAIL	(Server vazando versao)
+10037	FAIL	(X-Powered-By vazando tecnologia)
+90022	FAIL	(Erro de aplicacao exposto)
+10049	IGNORE	(Conteudo cacheavel: API JSON autenticada)

@@ -1,0 +1,89 @@
+# regras do projeto: o que ja deu problema aqui ou nao pode acontecer nunca.
+# rodam no CI junto dos pacotes p/python, p/owasp-top-ten, p/jwt e p/secrets
+rules:
+  - id: rota-sem-controle-de-acesso
+    message: >-
+      Rota FastAPI sem requires_role/current_principal. Toda rota nova nasce protegida;
+      rota publica de proposito leva '# nosemgrep: rota-sem-controle-de-acesso' com o motivo.
+    severity: ERROR
+    languages: [python]
+    paths: { include: ["app/api/"] }
+    patterns:
+      - pattern: |
+          @router.$METHOD(...)
+          def $F(...): ...
+      - metavariable-regex: { metavariable: $METHOD, regex: ^(get|post|put|patch|delete)$ }
+      - pattern-not: |
+          @router.$METHOD(..., dependencies=[..., Depends(requires_role(...)), ...], ...)
+          def $F(...): ...
+      - pattern-not: |
+          @router.$METHOD(...)
+          def $F(..., $P = Depends(requires_role(...)), ...): ...
+      - pattern-not: |
+          @router.$METHOD(...)
+          def $F(..., $P: $T = Depends(requires_role(...)), ...): ...
+      - pattern-not: |
+          @router.$METHOD(...)
+          def $F(..., $P: $T = Depends(current_principal), ...): ...
+
+  - id: jwt-decode-sem-algorithms
+    message: jwt.decode sem algorithms= aceita o algoritmo que o token declarar (alg confusion / none).
+    severity: ERROR
+    languages: [python]
+    patterns:
+      - pattern: jwt.decode(...)
+      - pattern-not: jwt.decode(..., algorithms=$A, ...)
+
+  - id: jwt-sem-verificar-assinatura
+    message: Decodificar JWT sem verificar assinatura ou expiracao.
+    severity: ERROR
+    languages: [python]
+    pattern-either:
+      - pattern: 'jwt.decode(..., options={..., "verify_signature": False, ...}, ...)'
+      - pattern: 'jwt.decode(..., options={..., "verify_exp": False, ...}, ...)'
+
+  - id: pii-ou-segredo-em-log
+    message: >-
+      Campo com PII ou segredo passado direto pro logger. O mascaramento do structlog e a ultima
+      linha de defesa, nao a primeira: logue o id, nunca o valor.
+    severity: ERROR
+    languages: [python]
+    patterns:
+      - pattern-either:
+          - pattern: $LOG.$M(..., cpf=$X, ...)
+          - pattern: $LOG.$M(..., senha=$X, ...)
+          - pattern: $LOG.$M(..., password=$X, ...)
+          - pattern: $LOG.$M(..., telefone=$X, ...)
+          - pattern: $LOG.$M(..., token=$X, ...)
+          - pattern: $LOG.$M(..., access_token=$X, ...)
+          - pattern: $LOG.$M(..., refresh_token=$X, ...)
+      - metavariable-regex: { metavariable: $M, regex: ^(debug|info|warning|error|exception|critical)$ }
+
+  - id: tls-sem-verificacao
+    message: Cliente HTTP/MQTT com verificacao de certificado desligada.
+    severity: ERROR
+    languages: [python]
+    pattern-either:
+      - pattern: httpx.$F(..., verify=False, ...)
+      - pattern: httpx.Client(..., verify=False, ...)
+      - pattern: requests.$F(..., verify=False, ...)
+      - pattern: $C.tls_insecure_set(True)
+      - pattern: ssl._create_unverified_context(...)
+      - pattern: $CTX.check_hostname = False
+
+  - id: comparacao-de-segredo-nao-constante
+    message: Comparar assinatura/token com == vaza tempo; use hmac.compare_digest.
+    severity: WARNING
+    languages: [python]
+    patterns:
+      - pattern-either:
+          - pattern: $A == $SIG
+          - pattern: $SIG == $A
+      - metavariable-regex: { metavariable: $SIG, regex: (?i).*(signature|assinatura|x_signature|mac)$ }
+
+  - id: forwarded-allow-ips-coringa
+    message: uvicorn com --forwarded-allow-ips=* deixa o cliente escolher o proprio IP (bypass de rate limit).
+    severity: ERROR
+    languages: [generic]
+    paths: { include: ["Dockerfile", "*.sh", "docker-compose*.yml"] }
+    pattern: forwarded-allow-ips=*

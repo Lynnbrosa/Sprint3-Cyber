@@ -1,0 +1,255 @@
+# pipeline DevSecOps do PrevioPLS (Ford Challenge, Sprint 3)
+#
+#   commit/PR ─┬─ 1 secrets (gitleaks, historico inteiro)
+#              ├─ 2 sast    (semgrep + regras do projeto, bandit)
+#              ├─ 3 sca     (pip-audit, dependency review no PR)
+#              ├─ 4 iac     (hadolint, trivy config em Dockerfile/compose/k8s)
+#              └─ 5 testes  (pytest contra postgres: authz, sessao, hmac, iot)
+#                     │ tudo verde
+#                     ▼
+#              6 build + scan da imagem (trivy HIGH/CRITICAL, SBOM CycloneDX)
+#                     ▼
+#              7 dast (stack sobe no runner: ZAP baseline + testes negativos de MQTT)
+#                     ▼ so na main
+#              8 publica no GHCR por digest + assina com cosign (keyless)
+#                     ▼ aprovacao manual (environment production)
+#              9 deploy
+#
+# actions pinadas por SHA (tag e mutavel); o dependabot atualiza os SHAs.
+
+name: DevSecOps
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # rotina semanal: segunda 06:00 UTC roda SCA + DAST mesmo sem commit (CVE nova aparece sem o codigo mudar)
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: devsecops-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  IMAGE: ghcr.io/${{ github.repository_owner }}/previopls-security
+
+jobs:
+  secrets:
+    name: 1 · secret scanning (gitleaks)
+    runs-on: ubuntu-latest
+    permissions: { contents: read, security-events: write }
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with: { fetch-depth: 0 }
+      - name: gitleaks no historico inteiro
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.28.0 git /repo \
+            --config /repo/.gitleaks.toml --redact --exit-code 1 \
+            --report-format sarif --report-path /repo/gitleaks.sarif
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        if: always()
+        continue-on-error: true # repo privado sem GHAS nao aceita SARIF
+        with: { sarif_file: gitleaks.sarif, category: gitleaks }
+
+  sast:
+    name: 2 · SAST (semgrep + bandit)
+    runs-on: ubuntu-latest
+    permissions: { contents: read, security-events: write }
+    container: { image: semgrep/semgrep:1.178.0 }
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: semgrep (regras OWASP + regras do projeto em .semgrep/)
+        run: |
+          semgrep scan --metrics=off --error --severity ERROR \
+            --config p/python --config p/owasp-top-ten --config p/jwt --config p/secrets \
+            --config .semgrep/ --sarif --output semgrep.sarif app/
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        if: always()
+        continue-on-error: true
+        with: { sarif_file: semgrep.sarif, category: semgrep }
+      - name: bandit (medio/alto quebra o build)
+        run: |
+          pip install --quiet "bandit[sarif]==1.9.4"
+          bandit -r app -c pyproject.toml --severity-level medium --confidence-level medium
+
+  sca:
+    name: 3 · SCA (pip-audit + dependency review)
+    runs-on: ubuntu-latest
+    permissions: { contents: read, pull-requests: write }
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with: { python-version: "${{ env.PYTHON_VERSION }}" }
+      - name: pip-audit (qualquer CVE conhecida quebra o build)
+        run: |
+          pip install --quiet pip-audit==2.9.0
+          pip-audit -r requirements.txt --strict --desc on -f markdown -o pip-audit.md || (cat pip-audit.md; exit 1)
+          cat pip-audit.md >> "$GITHUB_STEP_SUMMARY"
+      - name: dependency review (so em PR, barra dependencia nova com CVE alta ou licenca proibida)
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          deny-licenses: AGPL-3.0, GPL-3.0
+          comment-summary-in-pr: on-failure
+
+  iac:
+    name: 4 · IaC (hadolint + trivy config)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
+        with: { dockerfile: Dockerfile, failure-threshold: warning }
+      - name: trivy config (Dockerfile, compose, kubernetes)
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          trivyignores: .trivyignore
+
+  testes:
+    name: 5 · testes de seguranca (pytest + postgres)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_USER: teste, POSTGRES_PASSWORD: teste, POSTGRES_DB: teste }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U teste" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://teste:teste@localhost:5432/teste
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "${{ env.PYTHON_VERSION }}"
+          cache: pip
+      - run: pip install -r requirements.txt pytest==9.1.1 pytest-cov==7.0.0 anyio
+      - run: python -m pytest -q --cov=app --cov-report=term --junitxml=junit.xml
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        if: always()
+        with: { name: junit, path: junit.xml }
+
+  imagem:
+    name: 6 · build + scan da imagem (trivy + SBOM)
+    needs: [secrets, sast, sca, iac, testes]
+    runs-on: ubuntu-latest
+    permissions: { contents: read, security-events: write }
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          load: true
+          tags: previopls-security:ci
+          provenance: false
+      - name: trivy image (HIGH/CRITICAL com correcao disponivel quebra o build)
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: previopls-security:ci
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: sarif
+          output: trivy-image.sarif
+          trivyignores: .trivyignore
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        if: always()
+        continue-on-error: true
+        with: { sarif_file: trivy-image.sarif, category: trivy-image }
+      - name: SBOM CycloneDX
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: previopls-security:ci
+          format: cyclonedx
+          output: sbom.cdx.json
+          skip-setup-trivy: true
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with: { name: sbom, path: sbom.cdx.json }
+
+  dast:
+    name: 7 · DAST (ZAP baseline + ataques MQTT)
+    needs: [imagem]
+    runs-on: ubuntu-latest
+    permissions: { contents: read, issues: write }
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: sobe a stack de teste
+        run: |
+          python3 scripts/bootstrap_env.py
+          docker compose up -d --build --wait api nginx mosquitto ingestor
+      - name: ZAP baseline na borda (https://localhost:8443)
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
+        with:
+          target: https://localhost:8443/health
+          rules_file_name: .zap/rules.tsv
+          cmd_options: -a -j
+          fail_action: true
+          allow_issue_writing: false
+      - name: controles de IoT tem que recusar (sem certificado, CA falsa, texto claro)
+        run: |
+          for modo in sem-certificado ca-falsa texto-claro; do
+            docker compose --profile demo run --rm simulador --modo "$modo"
+          done
+      - name: logs em caso de falha
+        if: failure()
+        run: docker compose logs --tail 200 api nginx mosquitto ingestor
+
+  publicar:
+    name: 8 · publica e assina (GHCR + cosign)
+    needs: [dast]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write, id-token: write }
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: push
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          provenance: mode=max
+          sbom: true
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: assina a imagem por digest (keyless, OIDC do GitHub)
+        run: cosign sign --yes "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
+
+  deploy:
+    name: 9 · deploy (aprovacao manual)
+    needs: [publicar]
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production # revisores obrigatorios configurados no GitHub
+    permissions: { contents: read, id-token: write }
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+      - name: so sobe imagem assinada por este workflow
+        run: |
+          cosign verify "${{ env.IMAGE }}@${{ needs.publicar.outputs.digest }}" \
+            --certificate-identity-regexp "https://github.com/${{ github.repository }}/.github/workflows/devsecops.yml@refs/heads/main" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+      - name: aplica os manifests com o digest aprovado
+        run: |
+          cd infra/k8s
+          kustomize edit set image "ghcr.io/lynnbrosa/previopls-security=${{ env.IMAGE }}@${{ needs.publicar.outputs.digest }}"
+          kubectl apply -k . --server-side

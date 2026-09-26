@@ -1,0 +1,7 @@
+# mudanca em controle de seguranca precisa de revisao de quem cuida de seguranca
+/app/core/            @Lynnbrosa
+/app/iot/             @Lynnbrosa
+/.github/             @Lynnbrosa
+/infra/               @Lynnbrosa
+/iot/mosquitto/       @Lynnbrosa
+/nginx/               @Lynnbrosa

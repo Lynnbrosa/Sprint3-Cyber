@@ -1,0 +1,2 @@
+# cada excecao precisa de justificativa, dono e data de revisao. vazio = nenhuma excecao aceita.
+# formato: <CVE ou AVD-ID>  # motivo | dono | revisar em
