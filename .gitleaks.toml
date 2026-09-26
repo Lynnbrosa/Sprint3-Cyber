@@ -7,14 +7,14 @@ useDefault = true
 [[rules]]
 id = "fernet-key"
 description = "Chave Fernet (PII em repouso)"
-regex = '''(?i)fernet_keys?\s*[=:]\s*["']?([A-Za-z0-9_\-]{43}=)'''
+regex = '''(?i)fernet_keys?[ \t]*[=:][ \t]*["']?([A-Za-z0-9_\-]{43}=)'''
 secretGroup = 1
 keywords = ["fernet"]
 
 [[rules]]
 id = "segredo-hmac-ou-pepper"
 description = "Segredo HMAC do webhook ou pepper do hash de CPF"
-regex = '''(?i)(hmac_payload_secret|cpf_hash_pepper|metrics_token)\s*[=:]\s*["']?([^\s"']{16,})'''
+regex = '''(?i)(hmac_payload_secret|cpf_hash_pepper|metrics_token)[ \t]*[=:][ \t]*["']?([^\s"']{16,})'''
 secretGroup = 2
 keywords = ["hmac_payload_secret", "cpf_hash_pepper", "metrics_token"]
 
@@ -27,6 +27,7 @@ keywords = ["private key"]
 [allowlist]
 description = "valores de teste gerados em runtime e placeholders documentados"
 paths = [
+  '''docs/evidencias/''',
   '''tests/conftest\.py''',
   '''tests/test_crypto_segredos\.py''',
 ]

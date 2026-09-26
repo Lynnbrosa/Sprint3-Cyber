@@ -38,6 +38,13 @@ def _ctx(ca: str, cert: str | None = None, chave: str | None = None) -> ssl.SSLC
     return ctx
 
 
+def _km_atual(vin: str) -> int:
+    # odometro derivado do relogio (~180 km/h): sempre cresce entre execucoes do simulador.
+    # com km aleatorio a cada run o ingestor via "odometro voltando" e recusava, com razao
+    base = 60_000 + 7_000 * (VINS.index(vin) if vin in VINS else 0)
+    return base + int((time.time() - 1_790_000_000) * 0.05)
+
+
 def _leitura(vin: str, km: int) -> dict:
     return {
         "vin": vin,
@@ -122,7 +129,7 @@ def main() -> int:
     if estado["connack"] is None or estado["connack"].is_failure:
         print(f"[{a.modo}] broker recusou o veiculo: {estado}")
         return 1
-    km = random.randint(12_000, 60_000)
+    km = _km_atual(a.vin)
     try:
         if a.modo == "topico-alheio":
             outro = VINS[1] if a.vin == VINS[0] else VINS[0]
@@ -148,7 +155,7 @@ def main() -> int:
             print(f"[odometro-regressivo] {km} -> {km - 8000}: {r} (ingestor deve recusar)")
         else:
             for i in range(a.n):
-                km += random.randint(5, 900)
+                km = _km_atual(a.vin)
                 r = _publicar(c, estado, f"ford/telemetria/{a.vin}", json.dumps(_leitura(a.vin, km)).encode())
                 print(f"[normal] {a.vin} leitura {i + 1}/{a.n} km={km}: {r}")
                 time.sleep(a.intervalo)

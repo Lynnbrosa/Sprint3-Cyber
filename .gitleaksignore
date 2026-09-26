@@ -1,0 +1,7 @@
+# achados revisados e aceitos. cada linha e o fingerprint do gitleaks (commit:arquivo:regra:linha).
+# placeholders "troque-em-producao..." do .env.example da sprint 2: nao sao segredo real,
+# e o boot em APP_ENV=production recusa esses valores (Settings._segredos). revisado em 26/09/2026
+acead24d7d2e44d119ffb261874fceb8385988bd:.env.example:segredo-hmac-ou-pepper:31
+acead24d7d2e44d119ffb261874fceb8385988bd:.env.example:segredo-hmac-ou-pepper:34
+# JWT alg=none forjado de proposito na demo de ataque (sem assinatura, nao autentica nada). revisado em 26/09/2026
+8798e646c4486f018d8a18ef2226ec124eaf6495:app/ops/demo_trafego.py:jwt:139
