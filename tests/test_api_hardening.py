@@ -164,3 +164,24 @@ def test_erro_interno_nao_vaza_stack_trace(client, usuarios):
     r = client.get("/v1/leads/nao-e-uuid", headers=auth(tokens))
     assert r.status_code == 422
     assert "Traceback" not in r.text
+
+
+# ---- observabilidade ------------------------------------------------------------
+
+def test_metricas_de_seguranca_saem_da_trilha(client, usuarios):
+    client.post("/v1/auth/login", json={"email": "consultor@ford.com", "senha": "errada123"}, headers={"X-Client": "mobile"})
+    client.get("/v1/leads", headers={"Authorization": "Bearer lixo"})
+    corpo = client.get("/metrics").text
+    assert 'previopls_security_events_total{action="LOGIN_FAILED"}' in corpo
+    assert 'previopls_logins_total{client="mobile",result="falha"}' in corpo
+    assert 'previopls_auth_tokens_rejected_total{reason="invalido"}' in corpo
+    # rota com template, nunca o path cru
+    assert 'route="/v1/leads"' in corpo
+    client.get("/v1/leads/00000000-0000-0000-0000-00000000000A", headers={"Authorization": "Bearer lixo"})
+    assert 'route="/v1/leads/{lead_id}"' in client.get("/metrics").text
+
+
+def test_metrics_exige_token_quando_configurado(client, db, monkeypatch):
+    monkeypatch.setattr(get_settings(), "metrics_token", "t0k3n-de-metricas")
+    assert client.get("/metrics").status_code == 401
+    assert client.get("/metrics", headers={"Authorization": "Bearer t0k3n-de-metricas"}).status_code == 200

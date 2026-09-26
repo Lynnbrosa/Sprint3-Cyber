@@ -5,6 +5,7 @@ from fastapi import Request
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
+from app.core.metrics import SECURITY_EVENTS
 from app.models import AuditAction, AuditLog
 
 
@@ -65,6 +66,7 @@ class AuditService:
         )
         self.db.add(entry)
         self.db.flush()
+        SECURITY_EVENTS.labels(action.value).inc()
 
         log.info(
             "audit",

@@ -51,6 +51,21 @@ def pii_masking_processor(_, __, event_dict: dict) -> dict:
     return _walk_and_mask(event_dict)
 
 
+class _Tee:
+    """stdout (docker logs) + arquivo em volume que o promtail le."""
+
+    def __init__(self, path: str) -> None:
+        self._arquivo = open(path, "a", encoding="utf-8", buffering=1)  # noqa: SIM115
+
+    def write(self, texto: str) -> int:
+        sys.stdout.write(texto)
+        return self._arquivo.write(texto)
+
+    def flush(self) -> None:
+        sys.stdout.flush()
+        self._arquivo.flush()
+
+
 def configure_logging() -> None:
     settings = get_settings()
     level = logging.INFO if settings.is_prod else logging.DEBUG
@@ -69,10 +84,11 @@ def configure_logging() -> None:
         pii_masking_processor,
     ]
 
+    saida = _Tee(settings.log_file) if settings.log_file else sys.stdout
     structlog.configure(
         processors=shared_processors + [structlog.processors.JSONRenderer()],
         wrapper_class=structlog.make_filtering_bound_logger(level),
-        logger_factory=structlog.PrintLoggerFactory(),
+        logger_factory=structlog.PrintLoggerFactory(file=saida),
         cache_logger_on_first_use=True,
     )
 

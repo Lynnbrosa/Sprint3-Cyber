@@ -12,6 +12,7 @@ from app.api.v1 import api_v1
 from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
+from app.core.metrics import RATE_LIMITED, MetricsMiddleware, metrics_response, route_label
 from app.core.middleware import RequestIdMiddleware, SecurityHeadersMiddleware
 from app.core.ratelimit import limiter
 from app.core.security import ensure_jwt_keys
@@ -69,6 +70,7 @@ def create_app() -> FastAPI:
         max_age=3600,
     )
     app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(MetricsMiddleware)
 
     # Rate limit (slowapi anexa state ao app + exception handler)
     app.state.limiter = limiter
@@ -76,6 +78,7 @@ def create_app() -> FastAPI:
     @app.exception_handler(RateLimitExceeded)
     async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         log.warning("rate_limit.exceeded", limite=str(exc.detail), path=request.url.path)
+        RATE_LIMITED.labels(route_label(request)).inc()
         return JSONResponse(
             status_code=429,
             content={
@@ -103,6 +106,16 @@ def create_app() -> FastAPI:
                 status_code=503,
                 content={"status": "degraded", "components": {"database": "down"}},
             )
+
+    @app.get("/metrics", include_in_schema=False)
+    @limiter.exempt
+    def metrics(request: Request):
+        # o nginx devolve 404 pra /metrics; quem raspa e o prometheus pela rede interna.
+        # com METRICS_TOKEN definido, exige Bearer tambem (defesa em profundidade)
+        token = settings.metrics_token
+        if token and request.headers.get("Authorization") != f"Bearer {token}":
+            return JSONResponse(status_code=401, content={"error": {"code": "UNAUTHORIZED", "message": "token de metricas"}})
+        return metrics_response()
 
     @app.get("/version", tags=["meta"])
     def version():

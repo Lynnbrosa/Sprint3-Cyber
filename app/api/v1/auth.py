@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.metrics import LOGINS, client_type
 from app.core.ratelimit import limiter
 from app.core.security import Principal, current_principal
 from app.db.session import get_db
@@ -20,8 +21,13 @@ def login(
     db: Session = Depends(get_db),
 ) -> TokenPair:
     service = AuthService(db)
-    tokens = service.login(payload.email, payload.senha, request)
+    try:
+        tokens = service.login(payload.email, payload.senha, request)
+    except Exception:
+        LOGINS.labels("falha", client_type(request)).inc()
+        raise
     db.commit()
+    LOGINS.labels("sucesso", client_type(request)).inc()
     return tokens
 
 

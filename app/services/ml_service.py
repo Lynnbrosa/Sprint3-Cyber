@@ -1,8 +1,10 @@
 """Stub do motor preditivo — replica a lógica do backend Java (SHA-256 dos features D0)."""
 import hashlib
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from app.core.metrics import ML_LATENCY, ML_PREDICTIONS, ML_SCORE
 from app.models import PerfilCliente, PrioridadeLead
 
 
@@ -44,6 +46,15 @@ class ResultadoClassificacao:
 
 
 def classificar(f: FeaturesCompra) -> ResultadoClassificacao:
+    inicio = time.perf_counter()
+    resultado = _classificar(f)
+    ML_LATENCY.observe(time.perf_counter() - inicio)
+    ML_PREDICTIONS.labels(resultado.perfil.value).inc()
+    ML_SCORE.observe(resultado.score_risco)
+    return resultado
+
+
+def _classificar(f: FeaturesCompra) -> ResultadoClassificacao:
     seed = f"{f.concessionaria_id}|{f.modelo}|{f.versao}|{f.regiao}".encode()
     digest = hashlib.sha256(seed).digest()
     bucket = digest[0] % 100

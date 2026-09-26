@@ -168,7 +168,10 @@ def create_refresh_token(*, subject: str, role: Role) -> tuple[str, str, datetim
     return token, jti, exp
 
 
-def _unauthorized(msg: str) -> HTTPException:
+def _unauthorized(msg: str, motivo: str = "invalido") -> HTTPException:
+    from app.core.metrics import TOKENS_REJECTED
+
+    TOKENS_REJECTED.labels(motivo).inc()
     return HTTPException(status.HTTP_401_UNAUTHORIZED, detail=msg,
                          headers={"WWW-Authenticate": 'Bearer error="invalid_token"'})
 
@@ -193,12 +196,12 @@ def decode_token(token: str, *, expected_type: TokenType) -> dict:
             options={"require": ["exp", "iat", "iss", "aud", "sub", "jti", "type"]},
         )
     except jwt.ExpiredSignatureError as e:
-        raise _unauthorized("Token expirado") from e
+        raise _unauthorized("Token expirado", "expirado") from e
     except jwt.InvalidTokenError as e:
         raise _unauthorized("Token inválido") from e
 
     if payload.get("type") != expected_type.value:
-        raise _unauthorized("Tipo de token inválido")
+        raise _unauthorized("Tipo de token inválido", "tipo_errado")
 
     return payload
 
@@ -226,6 +229,9 @@ class _Bearer(HTTPBearer):
             creds = await super().__call__(request)
         except HTTPException as exc:
             if exc.status_code in (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN):
+                from app.core.metrics import TOKENS_REJECTED
+
+                TOKENS_REJECTED.labels("ausente").inc()
                 raise HTTPException(
                     status.HTTP_401_UNAUTHORIZED,
                     detail={"code": "UNAUTHORIZED", "message": "Não autenticado"},
@@ -262,14 +268,14 @@ def ensure_not_revoked(db: Session, payload: dict) -> None:
     from app.models import RevokedToken, Usuario
 
     if db.get(RevokedToken, payload["jti"]) is not None:
-        raise _unauthorized("Token revogado")
+        raise _unauthorized("Token revogado", "revogado")
     try:
         user_id = uuid.UUID(payload["sub"])
     except ValueError as e:
         raise _unauthorized("Token inválido") from e
     corte = db.scalar(select(Usuario.sessoes_revogadas_em).where(Usuario.id == user_id))
     if corte is not None and payload["iat"] < int(corte.timestamp()):
-        raise _unauthorized("Sessão revogada")
+        raise _unauthorized("Sessão revogada", "sessao_revogada")
 
 
 def requires_role(*allowed: Role):

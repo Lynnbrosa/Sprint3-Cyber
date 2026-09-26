@@ -51,6 +51,10 @@ class Settings(BaseSettings):
 
     security_alert_webhook_url: str = ""
 
+    metrics_token: str = ""
+    # alem do stdout, o JSON de log vai pra este arquivo (o promtail le dele, sem docker.sock)
+    log_file: str = ""
+
     # usuarios de demo: so fora de producao; as senhas vem do .env, nunca do codigo
     seed_default_users: bool | None = None
     seed_admin_password: str = ""

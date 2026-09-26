@@ -58,7 +58,12 @@ def banco():
 
     cfg = Config(str(Path(__file__).resolve().parent.parent / "alembic.ini"))
     cfg.set_main_option("script_location", str(Path(__file__).resolve().parent.parent / "alembic"))
-    command.downgrade(cfg, "base")
+    from sqlalchemy import create_engine, text
+
+    # schema do zero: downgrade com linha de auditoria nova esbarraria no CHECK antigo
+    with create_engine(TEST_DB).begin() as conn:
+        conn.execute(text("DROP SCHEMA public CASCADE"))
+        conn.execute(text("CREATE SCHEMA public"))
     command.upgrade(cfg, "head")
     yield
     from app.db.session import engine
