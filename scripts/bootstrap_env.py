@@ -29,6 +29,8 @@ def senha(n: int = 18) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true")
+    # no CI o log e publico: nao imprime senha nenhuma
+    ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args()
 
     destino = RAIZ / ".env"
@@ -66,6 +68,8 @@ def main() -> int:
             pass
 
     print(f".env criado em {destino}")
+    if a.quiet:
+        return 0
     print("usuarios de demo (so em desenvolvimento):")
     for papel in ("ADMIN", "CONSULTOR", "ANALISTA"):
         print(f"  {papel.lower()}@ford.com / {valores[f'SEED_{papel}_PASSWORD']}")

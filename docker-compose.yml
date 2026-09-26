@@ -66,6 +66,8 @@ services:
 
   api:
     image: previopls-security:dev
+    # imagem construida pelo servico certgen (build: .); sem isso, runner limpo tenta pull no docker hub
+    pull_policy: never
     <<: [*hardening, *app-env]
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-previopls}:${POSTGRES_PASSWORD:?rode scripts/bootstrap_env.py}@db:5432/${POSTGRES_DB:-previopls}
@@ -104,6 +106,8 @@ services:
 
   ingestor:
     image: previopls-security:dev
+    # imagem construida pelo servico certgen (build: .); sem isso, runner limpo tenta pull no docker hub
+    pull_policy: never
     <<: [*hardening, *app-env]
     entrypoint: ["python", "-m", "app.iot.ingestor"]
     environment:
@@ -145,6 +149,8 @@ services:
   # ---- observabilidade ----------------------------------------------------
   alert-sink:
     image: previopls-security:dev
+    # imagem construida pelo servico certgen (build: .); sem isso, runner limpo tenta pull no docker hub
+    pull_policy: never
     <<: [*hardening, *app-env]
     entrypoint: ["python", "-m", "app.ops.alert_sink"]
     healthcheck:
@@ -252,6 +258,7 @@ services:
   # ---- demo (so com --profile demo) ---------------------------------------
   simulador:
     image: previopls-security:dev
+    pull_policy: never
     profiles: [demo]
     <<: *hardening
     entrypoint: ["python", "-m", "app.iot.simulador"]
@@ -267,6 +274,7 @@ services:
 
   trafego:
     image: previopls-security:dev
+    pull_policy: never
     profiles: [demo]
     <<: *hardening
     entrypoint: ["python", "-m", "app.ops.demo_trafego"]
