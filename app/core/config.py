@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,7 +29,10 @@ class Settings(BaseSettings):
     jwt_access_ttl_minutes: int = 15
     jwt_refresh_ttl_days: int = 7
 
-    fernet_key: str = Field(..., min_length=32)
+    # FERNET_KEYS="nova,antiga": a primeira cifra, todas decifram (rotacao sem downtime).
+    # FERNET_KEY sozinha continua valendo pra quem ainda nao migrou o .env
+    fernet_keys: str = ""
+    fernet_key: str = ""
     cpf_hash_pepper: str = Field(..., min_length=16)
     hmac_payload_secret: str = Field(..., min_length=16)
 
@@ -63,6 +66,31 @@ class Settings(BaseSettings):
     @classmethod
     def _validate_origins(cls, v: str) -> str:
         return v.strip()
+
+    @property
+    def fernet_key_list(self) -> List[str]:
+        keys = [k.strip() for k in self.fernet_keys.split(",") if k.strip()]
+        if not keys and self.fernet_key:
+            keys = [self.fernet_key.strip()]
+        return keys
+
+    @model_validator(mode="after")
+    def _segredos(self) -> "Settings":
+        if not self.fernet_key_list:
+            raise ValueError("FERNET_KEYS (ou FERNET_KEY) obrigatoria")
+        if not self.is_prod:
+            return self
+        # em producao o boot falha com segredo de exemplo, curto ou reaproveitado
+        fracos = ("troque", "change", "exemplo", "example", "dev", "teste", "test")
+        segredos = {"CPF_HASH_PEPPER": self.cpf_hash_pepper, "HMAC_PAYLOAD_SECRET": self.hmac_payload_secret}
+        for nome, valor in segredos.items():
+            if len(valor) < 32 or any(f in valor.lower() for f in fracos):
+                raise ValueError(f"{nome} fraco ou de exemplo em producao")
+        if self.cpf_hash_pepper == self.hmac_payload_secret:
+            raise ValueError("CPF_HASH_PEPPER e HMAC_PAYLOAD_SECRET precisam ser diferentes")
+        if not self.cors_origin_list or "*" in self.cors_origin_list:
+            raise ValueError("CORS_ORIGINS precisa de whitelist explicita em producao")
+        return self
 
     @property
     def cors_origin_list(self) -> List[str]:

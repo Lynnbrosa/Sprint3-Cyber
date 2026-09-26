@@ -3,6 +3,8 @@ Camada de criptografia para PII em repouso.
 
 - Fernet (AES-128-CBC + HMAC-SHA256) cifra valores não-determinísticos:
   cada chamada produz ciphertext diferente. Bom para confidencialidade.
+- MultiFernet: a primeira chave de FERNET_KEYS cifra, as outras só decifram.
+  Rotação = põe a nova na frente, roda `python -m app.cli.rotate_keys`, tira a antiga.
 
 - cpf_hash() produz hash determinístico (HMAC-SHA256 com pepper) para
   permitir busca por igualdade no banco SEM expor o CPF plaintext.
@@ -17,7 +19,7 @@ import base64
 import hashlib
 import hmac
 
-from cryptography.fernet import Fernet, InvalidToken
+from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 
 from app.core.config import get_settings
 
@@ -25,7 +27,7 @@ from app.core.config import get_settings
 class CryptoService:
     def __init__(self) -> None:
         settings = get_settings()
-        self._fernet = Fernet(settings.fernet_key.encode())
+        self._fernet = MultiFernet([Fernet(k.encode()) for k in settings.fernet_key_list])
         self._pepper = settings.cpf_hash_pepper.encode()
 
     def encrypt(self, plaintext: str | None) -> str | None:
@@ -41,6 +43,15 @@ class CryptoService:
             return self._fernet.decrypt(ciphertext.encode("ascii")).decode("utf-8")
         except InvalidToken as e:
             raise ValueError("Token Fernet inválido — chave incorreta ou dado adulterado") from e
+
+    def rotate(self, ciphertext: str | None) -> str | None:
+        """Recifra com a chave primária (valor decifrado nunca sai daqui)."""
+        if not ciphertext:
+            return ciphertext
+        try:
+            return self._fernet.rotate(ciphertext.encode("ascii")).decode("ascii")
+        except InvalidToken as e:
+            raise ValueError("Token Fernet inválido — nenhuma chave configurada decifra") from e
 
     def cpf_hash(self, cpf: str) -> str:
         """HMAC-SHA256 determinístico do CPF normalizado para lookup."""
