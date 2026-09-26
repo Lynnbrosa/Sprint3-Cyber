@@ -6,50 +6,14 @@ Testes unitários dos blocos de segurança que não dependem de DB:
 - HMAC de payload (assinatura + janela temporal)
 - Mascaramento de PII nos logs
 """
-import base64
 import hashlib
 import hmac
-import os
 import time
-from datetime import timedelta
-from pathlib import Path
 
 import pytest
-from cryptography.fernet import Fernet
 
 
-# ---- Bootstrap ENV antes de importar a app ---------------------------------
-
-os.environ.setdefault("APP_ENV", "testing")
-os.environ.setdefault("FERNET_KEY", Fernet.generate_key().decode())
-os.environ.setdefault("CPF_HASH_PEPPER", "test-pepper-32-bytes-padding-aaaaaaa")
-os.environ.setdefault("HMAC_PAYLOAD_SECRET", "test-hmac-secret-32-bytes-padding-aaa")
-os.environ.setdefault("DATABASE_URL", "postgresql+psycopg://x:x@nohost/x")
-
-# Gera par RSA temporário
-_keys_dir = Path(__file__).parent / "_keys"
-_keys_dir.mkdir(exist_ok=True)
-_priv = _keys_dir / "priv.pem"
-_pub = _keys_dir / "pub.pem"
-if not _priv.exists():
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.primitives.asymmetric import rsa
-    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    _priv.write_bytes(key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption(),
-    ))
-    _pub.write_bytes(key.public_key().public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    ))
-os.environ["JWT_PRIVATE_KEY_PATH"] = str(_priv)
-os.environ["JWT_PUBLIC_KEY_PATH"] = str(_pub)
-
-# Limpa cache do Settings entre testes (lru_cache no get_settings).
-from app.core.config import get_settings  # noqa: E402
-get_settings.cache_clear()
+# o ambiente (chaves, segredos, banco) vem do conftest.py
 
 
 # ---- Fernet + CPF hash -----------------------------------------------------
