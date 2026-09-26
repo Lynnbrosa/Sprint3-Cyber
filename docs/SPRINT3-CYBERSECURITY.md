@@ -398,21 +398,21 @@ antes de qualquer escrita. Exemplos reais ([`logs-exemplo.txt`](evidencias/logs-
 **PrevioPLS · SOC / Segurança** — topo: contadores, eventos da trilha, JWT recusados, alertas
 ativos e incidentes registrados:
 
-![Grafana SOC](evidencias/prints/grafana-soc.png)
+![Dashboard SOC: contadores, eventos da trilha, JWT recusados, alertas ativos e incidentes](evidencias/prints/grafana-soc.png)
 
 **SOC (parte de baixo)** — logs de segurança, top IPs, logins por cliente, telemetria recusada e
 recusas de TLS no broker:
 
-![Grafana SOC 2](evidencias/prints/grafana-soc-2.png)
+![Dashboard SOC, parte de baixo: logs de segurança, telemetria recusada e recusas de TLS no broker](evidencias/prints/grafana-soc-2.png)
 
 **PrevioPLS · Operação** — saúde, requisições, status, latência, classificador D0 e telemetria:
 
-![Grafana Operação](evidencias/prints/grafana-operacao.png)
-![Grafana Operação 2](evidencias/prints/grafana-operacao-2.png)
+![Dashboard de Operação: saúde, requisições, status HTTP e latência](evidencias/prints/grafana-operacao.png)
+![Dashboard de Operação: classificador D0 (perfis, latência, score) e telemetria MQTT](evidencias/prints/grafana-operacao-2.png)
 
 **Prometheus · alertas disparando** depois da segunda rodada de ataques:
 
-![Prometheus alertas](evidencias/prints/prometheus-alertas.png)
+![Prometheus: alertas disparando depois da segunda rodada de ataques](evidencias/prints/prometheus-alertas.png)
 
 ### 3.5 Plano de resposta a incidentes
 

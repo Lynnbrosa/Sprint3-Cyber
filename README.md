@@ -8,8 +8,9 @@ Challenge FIAP 2026 · Ford — Desafio 02 (VIN Share / retenção pós-venda).
 | Gustavo Oliveira de Moura | 555827 |
 | Lynn Bueno Rosa | 551102 |
 
-**Entrega:** [`docs/SPRINT3-CYBERSECURITY.md`](docs/SPRINT3-CYBERSECURITY.md) (versão PDF:
-[`docs/Sprint3-Cybersecurity.pdf`](docs/Sprint3-Cybersecurity.pdf)) — documento único separado
+**Entrega:** [`docs/Sprint3-Cybersecurity.pdf`](docs/Sprint3-Cybersecurity.pdf) (Word editável:
+[`docs/Sprint3-Cybersecurity.docx`](docs/Sprint3-Cybersecurity.docx); mesmo conteúdo em
+[`docs/SPRINT3-CYBERSECURITY.md`](docs/SPRINT3-CYBERSECURITY.md)) — documento único separado
 pelas quatro atividades: pipeline DevSecOps, segurança em código e infraestrutura,
 observabilidade e resposta a incidentes, compliance e segurança contínua.
 

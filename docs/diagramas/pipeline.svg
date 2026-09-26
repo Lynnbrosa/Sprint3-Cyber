@@ -5,80 +5,80 @@
 <rect x='20' y='56' width='200' height='300' rx='10' fill='#f8fafc' stroke='#475569' stroke-dasharray='6 4'/>
 <text x='32' y='76' font-size='12' font-weight='700' fill='#475569' letter-spacing='0.5'>MÁQUINA DO DEV</text>
 <rect x='36' y='90' width='168' height='96' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
-<text x='120.0' y='111' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>pre-commit</text>
-<text x='120.0' y='129' font-size='11' text-anchor='middle' fill='#6b7280'>gitleaks · semgrep</text>
-<text x='120.0' y='144' font-size='11' text-anchor='middle' fill='#6b7280'>bandit · detect-private-key</text>
-<text x='120.0' y='159' font-size='11' text-anchor='middle' fill='#6b7280'>mesmos checks do CI</text>
+<text x='120.0' y='112' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>pre-commit</text>
+<text x='120.0' y='131' font-size='12.6' text-anchor='middle' fill='#6b7280'>gitleaks · semgrep</text>
+<text x='120.0' y='147' font-size='12.6' text-anchor='middle' fill='#6b7280'>bandit · detect-private-key</text>
+<text x='120.0' y='163' font-size='12.6' text-anchor='middle' fill='#6b7280'>mesmos checks do CI</text>
 <rect x='36' y='214' width='168' height='110' rx='7' fill='#ffffff' stroke='#003478' stroke-width='1.6'/>
-<text x='120.0' y='235' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>PR na main</text>
-<text x='120.0' y='253' font-size='11' text-anchor='middle' fill='#6b7280'>template com checklist</text>
-<text x='120.0' y='268' font-size='11' text-anchor='middle' fill='#6b7280'>STRIDE · CODEOWNERS</text>
-<text x='120.0' y='283' font-size='11' text-anchor='middle' fill='#6b7280'>branch protegida</text>
+<text x='120.0' y='236' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>PR na main</text>
+<text x='120.0' y='255' font-size='12.6' text-anchor='middle' fill='#6b7280'>template com checklist</text>
+<text x='120.0' y='271' font-size='12.6' text-anchor='middle' fill='#6b7280'>STRIDE · CODEOWNERS</text>
+<text x='120.0' y='287' font-size='12.6' text-anchor='middle' fill='#6b7280'>branch protegida</text>
 <line x1='120' y1='186' x2='120' y2='214' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
 <rect x='250' y='56' width='330' height='470' rx='10' fill='#fef2f2' stroke='#b91c1c' stroke-dasharray='6 4'/>
 <text x='262' y='76' font-size='12' font-weight='700' fill='#b91c1c' letter-spacing='0.5'>GATES EM PARALELO · FALHA BARRA</text>
 <rect x='268' y='84' width='294' height='70' rx='7' fill='#ffffff' stroke='#b91c1c' stroke-width='1.6'/>
-<text x='415.0' y='105' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>1 · Secret scanning</text>
-<text x='415.0' y='123' font-size='11' text-anchor='middle' fill='#6b7280'>gitleaks no histórico inteiro</text>
-<text x='415.0' y='138' font-size='11' text-anchor='middle' fill='#6b7280'>segredo vazado → build falha</text>
+<text x='415.0' y='106' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>1 · Secret scanning</text>
+<text x='415.0' y='125' font-size='12.6' text-anchor='middle' fill='#6b7280'>gitleaks no histórico inteiro</text>
+<text x='415.0' y='141' font-size='12.6' text-anchor='middle' fill='#6b7280'>segredo vazado → build falha</text>
 <rect x='268' y='170' width='294' height='70' rx='7' fill='#ffffff' stroke='#b91c1c' stroke-width='1.6'/>
-<text x='415.0' y='191' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>2 · SAST</text>
-<text x='415.0' y='209' font-size='11' text-anchor='middle' fill='#6b7280'>semgrep (OWASP + regras próprias)</text>
-<text x='415.0' y='224' font-size='11' text-anchor='middle' fill='#6b7280'>bandit médio/alto</text>
+<text x='415.0' y='192' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>2 · SAST</text>
+<text x='415.0' y='211' font-size='12.6' text-anchor='middle' fill='#6b7280'>semgrep (OWASP + regras próprias)</text>
+<text x='415.0' y='227' font-size='12.6' text-anchor='middle' fill='#6b7280'>bandit médio/alto</text>
 <rect x='268' y='256' width='294' height='70' rx='7' fill='#ffffff' stroke='#b91c1c' stroke-width='1.6'/>
-<text x='415.0' y='277' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>3 · SCA</text>
-<text x='415.0' y='295' font-size='11' text-anchor='middle' fill='#6b7280'>pip-audit --strict</text>
-<text x='415.0' y='310' font-size='11' text-anchor='middle' fill='#6b7280'>dependency review no PR</text>
+<text x='415.0' y='278' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>3 · SCA</text>
+<text x='415.0' y='297' font-size='12.6' text-anchor='middle' fill='#6b7280'>pip-audit --strict</text>
+<text x='415.0' y='313' font-size='12.6' text-anchor='middle' fill='#6b7280'>dependency review no PR</text>
 <rect x='268' y='342' width='294' height='70' rx='7' fill='#ffffff' stroke='#b91c1c' stroke-width='1.6'/>
-<text x='415.0' y='363' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>4 · IaC</text>
-<text x='415.0' y='381' font-size='11' text-anchor='middle' fill='#6b7280'>hadolint · trivy config</text>
-<text x='415.0' y='396' font-size='11' text-anchor='middle' fill='#6b7280'>Dockerfile, compose, k8s</text>
+<text x='415.0' y='364' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>4 · IaC</text>
+<text x='415.0' y='383' font-size='12.6' text-anchor='middle' fill='#6b7280'>hadolint · trivy config</text>
+<text x='415.0' y='399' font-size='12.6' text-anchor='middle' fill='#6b7280'>Dockerfile, compose, k8s</text>
 <rect x='268' y='428' width='294' height='70' rx='7' fill='#ffffff' stroke='#b91c1c' stroke-width='1.6'/>
-<text x='415.0' y='449' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>5 · Testes de segurança</text>
-<text x='415.0' y='467' font-size='11' text-anchor='middle' fill='#6b7280'>74 testes pytest + postgres</text>
-<text x='415.0' y='482' font-size='11' text-anchor='middle' fill='#6b7280'>authz · sessão · HMAC · IoT</text>
+<text x='415.0' y='450' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>5 · Testes de segurança</text>
+<text x='415.0' y='469' font-size='12.6' text-anchor='middle' fill='#6b7280'>75 testes pytest + postgres</text>
+<text x='415.0' y='485' font-size='12.6' text-anchor='middle' fill='#6b7280'>authz · sessão · HMAC · IoT</text>
 <line x1='204' y1='269' x2='268' y2='269' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
 <rect x='610' y='56' width='270' height='470' rx='10' fill='#fff7ed' stroke='#c2410c' stroke-dasharray='6 4'/>
 <text x='622' y='76' font-size='12' font-weight='700' fill='#c2410c' letter-spacing='0.5'>ARTEFATO</text>
 <rect x='628' y='90' width='234' height='96' rx='7' fill='#ffffff' stroke='#c2410c' stroke-width='1.6'/>
-<text x='745.0' y='111' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>6 · Build + scan da imagem</text>
-<text x='745.0' y='129' font-size='11' text-anchor='middle' fill='#6b7280'>trivy HIGH/CRITICAL (com fix)</text>
-<text x='745.0' y='144' font-size='11' text-anchor='middle' fill='#6b7280'>SBOM CycloneDX</text>
-<text x='745.0' y='159' font-size='11' text-anchor='middle' fill='#6b7280'>base pinada por digest</text>
+<text x='745.0' y='112' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>6 · Build + scan da imagem</text>
+<text x='745.0' y='131' font-size='12.6' text-anchor='middle' fill='#6b7280'>trivy HIGH/CRITICAL (com fix)</text>
+<text x='745.0' y='147' font-size='12.6' text-anchor='middle' fill='#6b7280'>SBOM CycloneDX</text>
+<text x='745.0' y='163' font-size='12.6' text-anchor='middle' fill='#6b7280'>base pinada por digest</text>
 <rect x='628' y='214' width='234' height='96' rx='7' fill='#ffffff' stroke='#c2410c' stroke-width='1.6'/>
-<text x='745.0' y='235' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>7 · DAST na stack de teste</text>
-<text x='745.0' y='253' font-size='11' text-anchor='middle' fill='#6b7280'>ZAP na borda https</text>
-<text x='745.0' y='268' font-size='11' text-anchor='middle' fill='#6b7280'>ataques MQTT: sem cert,</text>
-<text x='745.0' y='283' font-size='11' text-anchor='middle' fill='#6b7280'>CA falsa, texto claro</text>
+<text x='745.0' y='236' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>7 · DAST na stack de teste</text>
+<text x='745.0' y='255' font-size='12.6' text-anchor='middle' fill='#6b7280'>ZAP na borda https</text>
+<text x='745.0' y='271' font-size='12.6' text-anchor='middle' fill='#6b7280'>ataques MQTT: sem cert,</text>
+<text x='745.0' y='287' font-size='12.6' text-anchor='middle' fill='#6b7280'>CA falsa, texto claro</text>
 <rect x='628' y='338' width='234' height='96' rx='7' fill='#ffffff' stroke='#c2410c' stroke-width='1.6'/>
-<text x='745.0' y='359' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>8 · Publica e assina (main)</text>
-<text x='745.0' y='377' font-size='11' text-anchor='middle' fill='#6b7280'>GHCR por digest</text>
-<text x='745.0' y='392' font-size='11' text-anchor='middle' fill='#6b7280'>cosign keyless (OIDC)</text>
-<text x='745.0' y='407' font-size='11' text-anchor='middle' fill='#6b7280'>provenance + SBOM</text>
+<text x='745.0' y='360' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>8 · Publica e assina (main)</text>
+<text x='745.0' y='379' font-size='12.6' text-anchor='middle' fill='#6b7280'>GHCR por digest</text>
+<text x='745.0' y='395' font-size='12.6' text-anchor='middle' fill='#6b7280'>cosign keyless (OIDC)</text>
+<text x='745.0' y='411' font-size='12.6' text-anchor='middle' fill='#6b7280'>provenance + SBOM</text>
 <line x1='562' y1='269' x2='628' y2='138' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
-<text x='595.0' y='199.5' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>tudo verde</text>
+<text x='595.0' y='199.5' font-size='12' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>tudo verde</text>
 <line x1='745' y1='186' x2='745' y2='214' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
 <line x1='745' y1='310' x2='745' y2='338' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
 <rect x='910' y='56' width='250' height='470' rx='10' fill='#f0fdf4' stroke='#15803d' stroke-dasharray='6 4'/>
 <text x='922' y='76' font-size='12' font-weight='700' fill='#15803d' letter-spacing='0.5'>AMBIENTE</text>
 <rect x='928' y='90' width='214' height='96' rx='7' fill='#ffffff' stroke='#15803d' stroke-width='1.6'/>
-<text x='1035.0' y='111' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>9 · Deploy</text>
-<text x='1035.0' y='129' font-size='11' text-anchor='middle' fill='#6b7280'>environment production</text>
-<text x='1035.0' y='144' font-size='11' text-anchor='middle' fill='#6b7280'>aprovação manual</text>
-<text x='1035.0' y='159' font-size='11' text-anchor='middle' fill='#6b7280'>cosign verify antes do apply</text>
+<text x='1035.0' y='112' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>9 · Deploy</text>
+<text x='1035.0' y='131' font-size='12.6' text-anchor='middle' fill='#6b7280'>environment production</text>
+<text x='1035.0' y='147' font-size='12.6' text-anchor='middle' fill='#6b7280'>aprovação manual</text>
+<text x='1035.0' y='163' font-size='12.6' text-anchor='middle' fill='#6b7280'>cosign verify antes do apply</text>
 <rect x='928' y='214' width='214' height='96' rx='7' fill='#ffffff' stroke='#15803d' stroke-width='1.6'/>
-<text x='1035.0' y='235' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Kubernetes</text>
-<text x='1035.0' y='253' font-size='11' text-anchor='middle' fill='#6b7280'>PSA restricted</text>
-<text x='1035.0' y='268' font-size='11' text-anchor='middle' fill='#6b7280'>NetworkPolicy default deny</text>
-<text x='1035.0' y='283' font-size='11' text-anchor='middle' fill='#6b7280'>imagem por digest</text>
+<text x='1035.0' y='236' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>Kubernetes</text>
+<text x='1035.0' y='255' font-size='12.6' text-anchor='middle' fill='#6b7280'>PSA restricted</text>
+<text x='1035.0' y='271' font-size='12.6' text-anchor='middle' fill='#6b7280'>NetworkPolicy default deny</text>
+<text x='1035.0' y='287' font-size='12.6' text-anchor='middle' fill='#6b7280'>imagem por digest</text>
 <rect x='928' y='338' width='214' height='96' rx='7' fill='#ffffff' stroke='#15803d' stroke-width='1.6'/>
-<text x='1035.0' y='359' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Operação</text>
-<text x='1035.0' y='377' font-size='11' text-anchor='middle' fill='#6b7280'>métricas · logs · alertas</text>
-<text x='1035.0' y='392' font-size='11' text-anchor='middle' fill='#6b7280'>runbooks RB-01..07</text>
+<text x='1035.0' y='360' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>Operação</text>
+<text x='1035.0' y='379' font-size='12.6' text-anchor='middle' fill='#6b7280'>métricas · logs · alertas</text>
+<text x='1035.0' y='395' font-size='12.6' text-anchor='middle' fill='#6b7280'>runbooks RB-01..07</text>
 <line x1='862' y1='386' x2='928' y2='138' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
 <line x1='1035' y1='186' x2='1035' y2='214' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
 <line x1='1035' y1='310' x2='1035' y2='338' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
 <rect x='250' y='548' width='910' height='44' rx='7' fill='#f8fafc' stroke='#475569' stroke-width='1.6'/>
-<text x='705.0' y='569' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Rotina contínua: Dependabot semanal (pip, docker, compose, actions) + cron de segunda roda SCA e DAST sem commit</text>
+<text x='705.0' y='570' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>Rotina contínua: Dependabot semanal (pip, docker, compose, actions) + cron de segunda roda SCA e DAST sem commit</text>
 <line x1='1035' y1='526' x2='1035' y2='548' stroke='#6b7280' stroke-width='1.5' marker-end='url(#setac)'/>
 </svg>

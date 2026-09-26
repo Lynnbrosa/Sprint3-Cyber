@@ -3,7 +3,7 @@
 <rect width='1180' height='420' fill='#ffffff'/>
 <text x='24' y='34' font-size='19' font-weight='700' fill='#1f2937'>Observabilidade · de onde vem cada sinal</text>
 <rect x='24' y='70' width='280' height='300' rx='7' fill='#ffffff' stroke='#1d4ed8' stroke-width='1.6'/>
-<text x='164.0' y='91' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Fontes</text>
+<text x='164.0' y='92' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>Fontes</text>
 <text x='44' y='112' font-size='12.5' text-anchor='start' font-weight='700' fill='#1f2937'>api</text>
 <text x='130' y='112' font-size='11' text-anchor='start' font-weight='400' fill='#6b7280'>auditoria → security_events_total</text>
 <text x='130' y='127' font-size='11' text-anchor='start' font-weight='400' fill='#6b7280'>tokens recusados · 429 · ML</text>
@@ -18,39 +18,39 @@
 <text x='44' y='320' font-size='12.5' text-anchor='start' font-weight='700' fill='#1f2937'>alert-sink</text>
 <text x='130' y='320' font-size='11' text-anchor='start' font-weight='400' fill='#6b7280'>incidente.alerta</text>
 <rect x='400' y='80' width='220' height='76' rx='7' fill='#ffffff' stroke='#6d28d9' stroke-width='1.6'/>
-<text x='510.0' y='101' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Prometheus</text>
-<text x='510.0' y='119' font-size='11' text-anchor='middle' fill='#6b7280'>scrape 15 s (Bearer na api)</text>
-<text x='510.0' y='134' font-size='11' text-anchor='middle' fill='#6b7280'>17 regras em alerts.yml</text>
+<text x='510.0' y='102' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>Prometheus</text>
+<text x='510.0' y='121' font-size='12.6' text-anchor='middle' fill='#6b7280'>scrape 15 s (Bearer na api)</text>
+<text x='510.0' y='137' font-size='12.6' text-anchor='middle' fill='#6b7280'>17 regras em alerts.yml</text>
 <rect x='400' y='280' width='220' height='76' rx='7' fill='#ffffff' stroke='#6d28d9' stroke-width='1.6'/>
-<text x='510.0' y='301' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Promtail → Loki</text>
-<text x='510.0' y='319' font-size='11' text-anchor='middle' fill='#6b7280'>arquivos em volume ro</text>
-<text x='510.0' y='334' font-size='11' text-anchor='middle' fill='#6b7280'>retenção 30 dias</text>
+<text x='510.0' y='302' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>Promtail → Loki</text>
+<text x='510.0' y='321' font-size='12.6' text-anchor='middle' fill='#6b7280'>arquivos em volume ro</text>
+<text x='510.0' y='337' font-size='12.6' text-anchor='middle' fill='#6b7280'>retenção 30 dias</text>
 <rect x='700' y='80' width='200' height='76' rx='7' fill='#ffffff' stroke='#6d28d9' stroke-width='1.6'/>
-<text x='800.0' y='101' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Alertmanager</text>
-<text x='800.0' y='119' font-size='11' text-anchor='middle' fill='#6b7280'>agrupa por alerta</text>
-<text x='800.0' y='134' font-size='11' text-anchor='middle' fill='#6b7280'>crítico sem espera</text>
+<text x='800.0' y='102' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>Alertmanager</text>
+<text x='800.0' y='121' font-size='12.6' text-anchor='middle' fill='#6b7280'>agrupa por alerta</text>
+<text x='800.0' y='137' font-size='12.6' text-anchor='middle' fill='#6b7280'>crítico sem espera</text>
 <rect x='960' y='80' width='196' height='76' rx='7' fill='#ffffff' stroke='#6d28d9' stroke-width='1.6'/>
-<text x='1058.0' y='101' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>alert-sink</text>
-<text x='1058.0' y='119' font-size='11' text-anchor='middle' fill='#6b7280'>registra o incidente</text>
-<text x='1058.0' y='134' font-size='11' text-anchor='middle' fill='#6b7280'>(Teams/PagerDuty em prod)</text>
+<text x='1058.0' y='102' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>alert-sink</text>
+<text x='1058.0' y='121' font-size='12.6' text-anchor='middle' fill='#6b7280'>registra o incidente</text>
+<text x='1058.0' y='137' font-size='12.6' text-anchor='middle' fill='#6b7280'>(Teams/PagerDuty em prod)</text>
 <rect x='700' y='280' width='200' height='76' rx='7' fill='#ffffff' stroke='#6d28d9' stroke-width='1.6'/>
-<text x='800.0' y='301' font-size='13' font-weight='700' text-anchor='middle' fill='#1f2937'>Grafana</text>
-<text x='800.0' y='319' font-size='11' text-anchor='middle' fill='#6b7280'>SOC / Segurança</text>
-<text x='800.0' y='334' font-size='11' text-anchor='middle' fill='#6b7280'>Operação (API · IoT · ML)</text>
+<text x='800.0' y='302' font-size='14.5' font-weight='700' text-anchor='middle' fill='#1f2937'>Grafana</text>
+<text x='800.0' y='321' font-size='12.6' text-anchor='middle' fill='#6b7280'>SOC / Segurança</text>
+<text x='800.0' y='337' font-size='12.6' text-anchor='middle' fill='#6b7280'>Operação (API · IoT · ML)</text>
 <line x1='304' y1='150' x2='400' y2='118' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
-<text x='352.0' y='124.0' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>métricas (api, ingestor, sink)</text>
+<text x='352.0' y='124.0' font-size='12' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>métricas (api, ingestor, sink)</text>
 <line x1='304' y1='300' x2='400' y2='318' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
-<text x='352.0' y='299.0' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>logs JSON (todos)</text>
+<text x='352.0' y='299.0' font-size='12' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>logs JSON (todos)</text>
 <line x1='620' y1='118' x2='700' y2='118' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
-<text x='660.0' y='112.0' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>dispara</text>
+<text x='660.0' y='112.0' font-size='12' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>dispara</text>
 <line x1='900' y1='118' x2='960' y2='118' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
-<text x='930.0' y='112.0' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>webhook</text>
+<text x='930.0' y='112.0' font-size='12' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>webhook</text>
 <line x1='620' y1='318' x2='700' y2='318' stroke='#1f2937' stroke-width='1.5' marker-end='url(#seta)'/>
-<text x='660.0' y='310.0' font-size='10.5' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>consulta</text>
+<text x='660.0' y='310.0' font-size='12' text-anchor='middle' fill='#1f2937' paint-order='stroke' stroke='#ffffff' stroke-width='4'>consulta</text>
 <line x1='510' y1='156' x2='720' y2='280' stroke='#6b7280' stroke-width='1.5' marker-end='url(#setac)'/>
-<text x='645.0' y='212.0' font-size='10.5' text-anchor='middle' fill='#6b7280' paint-order='stroke' stroke='#ffffff' stroke-width='4'>consulta</text>
+<text x='645.0' y='212.0' font-size='12' text-anchor='middle' fill='#6b7280' paint-order='stroke' stroke='#ffffff' stroke-width='4'>consulta</text>
 <line x1='800' y1='156' x2='800' y2='280' stroke='#6b7280' stroke-width='1.5' marker-end='url(#setac)'/>
-<text x='844.0' y='212.0' font-size='10.5' text-anchor='middle' fill='#6b7280' paint-order='stroke' stroke='#ffffff' stroke-width='4'>alertas ativos</text>
+<text x='844.0' y='212.0' font-size='12' text-anchor='middle' fill='#6b7280' paint-order='stroke' stroke='#ffffff' stroke-width='4'>alertas ativos</text>
 <path d='M1058,156 Q1010,480 560,356' fill='none' stroke='#6b7280' stroke-width='1.5' stroke-dasharray='5 4' marker-end='url(#setac)'/>
-<text x='909.5' y='390.0' font-size='10.5' text-anchor='middle' fill='#6b7280' paint-order='stroke' stroke='#ffffff' stroke-width='4'>incidente volta como log</text>
+<text x='909.5' y='390.0' font-size='12' text-anchor='middle' fill='#6b7280' paint-order='stroke' stroke='#ffffff' stroke-width='4'>incidente volta como log</text>
 </svg>
