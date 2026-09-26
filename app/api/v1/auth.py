@@ -12,7 +12,7 @@ from app.services.auth_service import AuthService
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/login", response_model=TokenPair)
+@router.post("/login", response_model=TokenPair)  # nosemgrep: rota-sem-controle-de-acesso -- e a porta de entrada, protegida por rate limit + lockout
 @limiter.limit(get_settings().rate_limit_login)
 def login(
     request: Request,
@@ -31,7 +31,7 @@ def login(
     return tokens
 
 
-@router.post("/refresh", response_model=TokenPair)
+@router.post("/refresh", response_model=TokenPair)  # nosemgrep: rota-sem-controle-de-acesso -- autentica pelo proprio refresh token
 @limiter.limit("20/minute")
 def refresh(
     request: Request,
