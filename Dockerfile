@@ -20,7 +20,7 @@ RUN groupadd -r app && useradd -r -g app -u 1001 app
 
 COPY --chown=app:app app/ ./app/
 COPY --chown=app:app alembic/ ./alembic/
-COPY --chown=app:app alembic.ini ./
+COPY --chown=app:app alembic.ini docker-entrypoint.sh ./
 
 USER app
 
@@ -29,4 +29,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips=*"]
+ENTRYPOINT ["sh", "/app/docker-entrypoint.sh"]

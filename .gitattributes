@@ -1,0 +1,5 @@
+# shell e config de container quebram com CRLF dentro do linux
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.pdf binary

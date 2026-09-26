@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.ratelimit import limiter
 from app.core.security import Principal, current_principal
 from app.db.session import get_db
@@ -11,7 +12,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/login", response_model=TokenPair)
-@limiter.limit("5/minute")
+@limiter.limit(get_settings().rate_limit_login)
 def login(
     request: Request,
     response: Response,

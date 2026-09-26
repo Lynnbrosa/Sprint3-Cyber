@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import text
 
 from app.api.v1 import api_v1
@@ -54,6 +55,9 @@ def create_app() -> FastAPI:
     )
 
     # Middlewares (ordem importa: o último registrado é o mais externo).
+    # sem o SlowAPIMiddleware o default_limits (100/min) nao valia pra rota nenhuma,
+    # so as que tinham @limiter.limit explicito
+    app.add_middleware(SlowAPIMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(
         CORSMiddleware,
@@ -70,7 +74,8 @@ def create_app() -> FastAPI:
     app.state.limiter = limiter
 
     @app.exception_handler(RateLimitExceeded)
-    async def rate_limit_handler(_request: Request, exc: RateLimitExceeded):
+    async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+        log.warning("rate_limit.exceeded", limite=str(exc.detail), path=request.url.path)
         return JSONResponse(
             status_code=429,
             content={
@@ -87,6 +92,7 @@ def create_app() -> FastAPI:
     app.include_router(api_v1)
 
     @app.get("/health", tags=["meta"])
+    @limiter.exempt
     def health():
         try:
             with engine.connect() as conn:

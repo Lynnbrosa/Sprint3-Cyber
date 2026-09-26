@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     rate_limit_global: str = "100/minute"
     rate_limit_login: str = "5/minute"
     rate_limit_llm: str = "10/minute"
+    # memory:// serve pra uma replica; com mais de uma, redis://host:6379
+    rate_limit_storage_uri: str = "memory://"
 
     lockout_max_failures: int = 5
     lockout_window_seconds: int = 60
