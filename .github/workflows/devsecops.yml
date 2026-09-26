@@ -71,6 +71,19 @@ jobs:
           semgrep scan --metrics=off --error --severity ERROR \
             --config p/python --config p/owasp-top-ten --config p/jwt --config p/secrets \
             --config .semgrep/ --sarif --output semgrep.sarif app/
+      # o semgrep grava no SARIF ate o achado com nosemgrep (suppressions: inSource) e o github
+      # abre alerta pra ele assim mesmo; a excecao ja esta justificada no codigo
+      - name: tira do SARIF o que tem nosemgrep
+        if: always()
+        run: |
+          [ -f semgrep.sarif ] || exit 0
+          python3 - <<'EOF'
+          import json
+          d = json.load(open("semgrep.sarif"))
+          for run in d["runs"]:
+              run["results"] = [r for r in run["results"] if not r.get("suppressions")]
+          json.dump(d, open("semgrep.sarif", "w"))
+          EOF
       - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
         if: always()
         continue-on-error: true

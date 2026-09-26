@@ -1,12 +1,12 @@
 # rotina de revisao de dependencias: PR automatico toda segunda.
 # patch/minor vem agrupado num PR so; major vem separado pra revisao com calma
+# sem labels proprias: as padrao (dependencies + ecossistema) o dependabot cria sozinho
 version: 2
 updates:
   - package-ecosystem: pip
     directory: /
     schedule: { interval: weekly, day: monday, time: "06:00", timezone: America/Sao_Paulo }
     open-pull-requests-limit: 10
-    labels: [dependencias, seguranca]
     groups:
       python-patch-minor:
         update-types: [minor, patch]
@@ -14,17 +14,14 @@ updates:
   - package-ecosystem: docker
     directory: /
     schedule: { interval: weekly, day: monday, time: "06:00", timezone: America/Sao_Paulo }
-    labels: [dependencias, imagem]
 
   - package-ecosystem: docker-compose
     directory: /
     schedule: { interval: weekly, day: monday, time: "06:00", timezone: America/Sao_Paulo }
-    labels: [dependencias, imagem]
 
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly, day: monday, time: "06:00", timezone: America/Sao_Paulo }
-    labels: [dependencias, ci]
     groups:
       actions:
         patterns: ["*"]

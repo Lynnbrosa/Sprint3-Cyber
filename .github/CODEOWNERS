@@ -5,3 +5,11 @@
 /infra/               @Lynnbrosa
 /iot/mosquitto/       @Lynnbrosa
 /nginx/               @Lynnbrosa
+# rota nova ou nosemgrep em rota existente
+/app/api/             @Lynnbrosa
+# arquivos de excecao dos scanners: aceitar risco tambem passa por revisao
+/.semgrep/            @Lynnbrosa
+/.zap/                @Lynnbrosa
+/.gitleaks.toml       @Lynnbrosa
+/.gitleaksignore      @Lynnbrosa
+/.trivyignore         @Lynnbrosa

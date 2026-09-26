@@ -151,6 +151,19 @@ os dois valores passaria despercebida. A borda agora esconde os cabeçalhos que 
 (`proxy_hide_header`) e passou a mandar também `Cross-Origin-Resource-Policy` e
 `Cache-Control: no-store`, que o ZAP tinha deixado como aviso.
 
+Na execução seguinte (run #17, commit `638fb66`) **os nove estágios passaram** em 6 min 39 s: a
+imagem foi publicada em `ghcr.io/lynnbrosa/previopls-security` com assinatura cosign, e o deploy
+fica parado (skipped) até existir o ambiente `production` com revisores e a variável
+`DEPLOY_ENABLED`.
+
+O Code scanning do GitHub ainda mostrava 2 alertas `rota-sem-controle-de-acesso` em `auth.py`:
+são o login e o refresh, públicos de propósito e marcados com `nosemgrep` e o motivo. O gate já
+os ignorava, mas o semgrep grava a exceção no SARIF (`suppressions: inSource`) e o GitHub abre
+alerta mesmo assim. O job agora tira do SARIF o que já tem exceção justificada no código; a
+exceção continua visível no próprio código e passa pela revisão do CODEOWNERS.
+
+![Pipeline DevSecOps aprovado no GitHub Actions (run #17)](evidencias/prints/pipeline-github-verde.png)
+
 ### 1.5 Rotina contínua ligada ao pipeline
 
 | Rotina | Onde está | Frequência |
@@ -683,6 +696,15 @@ fbc7418 feat(ops): auditoria de permissoes, backup cifrado e teste de restauraca
 57b122c fix(obs): alerta da primeira ocorrencia nunca disparava
 31c1443 chore(secrets): triagem do gitleaks e demo mais robusta
 ee289d2 chore(sast): login e refresh marcados como publicos de proposito na regra do semgrep
+fef3568 docs: documento da sprint 3, diagramas, runbooks e evidencias de execucao
+f4de7fc docs: evidencias sem caminho local da maquina e pdf regerado
+a936b83 ci: corrige o workflow depois da primeira execucao no github
+b855fee docs: registra a primeira execucao do pipeline no github
+db4da88 ci: gate do trivy separado do relatorio SARIF e banco de CVE por espelho
+cb29e3e ci: DAST sobe a stack em runner limpo e nao imprime senha no log
+8452a90 docs: documento em A4 (Word + PDF) com capa, sumario e diagramas legiveis
+fb18eb9 fix(infra): tag do mosquitto que existe no docker hub (2.1.2-alpine)
+638fb66 fix(edge): headers de seguranca uma vez so na resposta (ZAP 10035 no DAST)
 ```
 
 `git show <hash>` mostra o diff de cada correção.
