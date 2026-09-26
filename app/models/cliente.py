@@ -1,6 +1,6 @@
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Enum, Float, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -40,7 +40,7 @@ class Cliente(Base):
     )
     score_risco = Column(Float, nullable=True)
 
-    criado_em = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True)
+    criado_em = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     classificado_em = Column(DateTime(timezone=True), nullable=True)
 
     # LGPD: marcador de anonimização.

@@ -1,6 +1,6 @@
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -43,9 +43,9 @@ class Lead(Base):
     )
     script_oferta = Column(Text, nullable=True)
     observacao = Column(Text, nullable=True)
-    criado_em = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    atualizado_em = Column(DateTime(timezone=True), default=datetime.utcnow,
-                           onupdate=datetime.utcnow, nullable=False)
+    criado_em = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    atualizado_em = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
+                           onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     cliente = relationship("Cliente", back_populates="leads")
     veiculo = relationship("Veiculo", back_populates="leads")

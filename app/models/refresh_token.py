@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -20,6 +20,6 @@ class RefreshToken(Base):
     jti = Column(String(64), unique=True, nullable=False, index=True)
     usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id", ondelete="CASCADE"),
                         nullable=False, index=True)
-    issued_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    issued_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
     revoked = Column(Boolean, nullable=False, default=False, index=True)

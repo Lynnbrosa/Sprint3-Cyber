@@ -63,21 +63,25 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(HTTPException)
     async def handle_http(_request: Request, exc: HTTPException):
+        # sem repassar exc.headers o WWW-Authenticate do 401 se perdia aqui
+        headers = getattr(exc, "headers", None)
         if isinstance(exc.detail, dict):
             return JSONResponse(
                 status_code=exc.status_code,
-                content=_body("HTTP_ERROR", exc.detail.get("message", "Erro"), exc.detail),
+                content=_body(exc.detail.get("code", "HTTP_ERROR"), exc.detail.get("message", "Erro"), exc.detail),
+                headers=headers,
             )
         return JSONResponse(
             status_code=exc.status_code,
             content=_body("HTTP_ERROR", str(exc.detail)),
+            headers=headers,
         )
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation(_request: Request, exc: RequestValidationError):
         details = jsonable_encoder({"errors": exc.errors()})
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=422,
             content=_body("VALIDATION_ERROR", "Dados inválidos", details),
         )
 
