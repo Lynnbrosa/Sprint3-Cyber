@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+.env.local
+*.egg-info/
+dist/
+build/
+
+# Secrets — NUNCA commitar chaves nem certs, nem que sejam de dev
+keys/
+nginx/certs/*.key
+nginx/certs/*.crt
+nginx/certs/*.pem
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Test
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db

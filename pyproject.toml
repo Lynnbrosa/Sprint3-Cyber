@@ -1,0 +1,9 @@
+[project]
+name = "previo-pls-security"
+version = "1.0.0"
+description = "PrevioPLS — controles de cybersecurity (FastAPI + LGPD)"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
