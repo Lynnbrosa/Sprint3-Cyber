@@ -211,7 +211,7 @@ services:
 
   # le os arquivos de log em volume read-only; sem docker.sock montado
   promtail:
-    image: grafana/promtail:3.4.2
+    image: grafana/promtail:3.6.8
     <<: *hardening
     command: ["-config.file=/etc/promtail/promtail.yml"]
     # o mosquitto grava o log em 0600; sem essa capability (so leitura) o coletor nao abre o arquivo
