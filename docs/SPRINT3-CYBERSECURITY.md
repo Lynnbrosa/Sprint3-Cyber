@@ -143,6 +143,14 @@ estágios que ainda não tinham rodado (nome da imagem no GHCR precisa ser minú
 aviso e não só em FAIL, `compose run` sem `-T`). Tudo corrigido no commit seguinte; o Dependabot já
 abriu as primeiras verificações de pip, Docker, Compose e Actions.
 
+Com a stack subindo no runner (a tag do Mosquitto fixada aqui só existia na máquina local; a
+oficial é `2.1.2-alpine`, mesmo digest), **o DAST pegou um achado real**: `Strict-Transport-Security`
+duplicado (ZAP 10035, FAIL). O nginx e a API mandavam os mesmos cinco cabeçalhos de segurança; com
+dois HSTS na resposta a RFC 6797 manda o navegador ler só o primeiro, e uma divergência futura entre
+os dois valores passaria despercebida. A borda agora esconde os cabeçalhos que vêm da API
+(`proxy_hide_header`) e passou a mandar também `Cross-Origin-Resource-Policy` e
+`Cache-Control: no-store`, que o ZAP tinha deixado como aviso.
+
 ### 1.5 Rotina contínua ligada ao pipeline
 
 | Rotina | Onde está | Frequência |
@@ -245,8 +253,9 @@ janela de 5 min, `compare_digest`, uma assinatura vale uma vez. Demo: original 2
 corpo adulterado 401; timestamp velho 401; sem assinatura 401.
 
 **Headers e erros**: HSTS preload, CSP `default-src 'none'` na API, `X-Frame-Options DENY`,
-`nosniff`, `Referrer-Policy`, `Permissions-Policy`, sem `Server` com versão; Swagger desligado em
-produção; erro sempre `{"error": {"code", "message"}}` com `incident=<id>` e nunca stack trace.
+`nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Resource-Policy` e
+`Cache-Control: no-store` (resposta com PII), cada um uma vez só na resposta, sem `Server` com
+versão; Swagger desligado em produção; erro sempre `{"error": {"code", "message"}}` com `incident=<id>` e nunca stack trace.
 
 ### 2.4 Controle de acesso por perfil
 
@@ -647,7 +656,7 @@ RPO de 24 h e RTO de 4 h no ambiente de demo; em produção, PITR de 5 min do ba
 | Chave Fernet/JWT em variável/arquivo | ambiente acadêmico | Azure Key Vault / AWS KMS no deploy |
 | Tráfego interno em HTTP dentro da rede do cluster | rede isolada | service mesh com mTLS (Linkerd/Istio) |
 | Usuário único do banco escreve em `audit_logs` | migrations e app compartilham o papel | papéis separados (`app_rw` sem `UPDATE/DELETE` em `audit_logs`) |
-| ZAP não executado localmente | imagem de ~1,5 GB e máquina no limite | roda no job 7 do pipeline |
+| ZAP só em modo baseline (passivo) | o scan ativo demora mais que o job e grava dados de teste | full scan autenticado no staging antes do piloto |
 
 ---
 

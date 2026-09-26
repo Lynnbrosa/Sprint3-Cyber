@@ -156,6 +156,8 @@ def test_headers_de_seguranca(client, db):
     assert h["x-content-type-options"] == "nosniff"
     assert h["x-frame-options"] == "DENY"
     assert h["content-security-policy"].startswith("default-src 'none'")
+    assert h["cross-origin-resource-policy"] == "same-origin"
+    assert "no-store" in h["cache-control"]
     assert "server" not in {k.lower() for k in h.keys()} or "uvicorn" not in h.get("server", "")
 
 

@@ -91,6 +91,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Permissions-Policy"] = (
             "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
         )
+        response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+        # resposta tem PII: nada de cache em proxy nem no navegador
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
 
         path = request.url.path
         is_docs = any(path.startswith(p) for p in self.DOC_PATHS)
