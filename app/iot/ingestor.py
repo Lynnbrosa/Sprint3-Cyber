@@ -99,7 +99,15 @@ def _on_message(_client, _userdata, msg):
         log.error("iot.erro_processamento", erro=type(exc).__name__)
 
 
+MOTIVOS = ("topico_invalido", "payload_grande", "json_invalido", "schema", "vin_divergente",
+           "relogio", "odometro_regressivo")
+
+
 def main() -> int:
+    # series com 0 desde o boot, senao a primeira recusa nao aparece no increase() (ver app/core/metrics.py)
+    for motivo in MOTIVOS:
+        MENSAGENS.labels("rejeitada", motivo)
+    MENSAGENS.labels("aceita", "ok")
     start_http_server(int(os.environ.get("METRICS_PORT", "9101")))
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="ingestor", protocol=mqtt.MQTTv5)
     client.tls_set_context(contexto_tls(f"{CERTS}/ca.crt", f"{CERTS}/ingestor.crt", f"{CERTS}/ingestor.key"))

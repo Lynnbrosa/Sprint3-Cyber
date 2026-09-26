@@ -208,6 +208,8 @@ services:
     image: grafana/promtail:3.4.2
     <<: *hardening
     command: ["-config.file=/etc/promtail/promtail.yml"]
+    # o mosquitto grava o log em 0600; sem essa capability (so leitura) o coletor nao abre o arquivo
+    cap_add: [DAC_READ_SEARCH]
     volumes:
       - ./observability/promtail/promtail.yml:/etc/promtail/promtail.yml:ro
       - api_logs:/logs/api:ro
@@ -242,7 +244,8 @@ services:
       - grafana_data:/var/lib/grafana
     ports: ["127.0.0.1:3300:3000"]
     networks: [observability]
-    mem_limit: 256m
+    # 256m estourava (OOM) renderizando o dashboard SOC inteiro
+    mem_limit: 768m
     pids_limit: 200
     depends_on: [prometheus, loki]
 

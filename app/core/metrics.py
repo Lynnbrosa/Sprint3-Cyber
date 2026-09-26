@@ -86,3 +86,28 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
 def metrics_response() -> Response:
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+MOTIVOS_TOKEN = ("ausente", "invalido", "expirado", "tipo_errado", "revogado", "sessao_revogada")
+
+
+def inicializar_series() -> None:
+    """
+    Cria toda serie de seguranca com 0 no boot. Sem isso o contador nasce direto com o
+    valor do primeiro evento (4 HMAC recusados antes do primeiro scrape = serie ja nasce 4),
+    o increase() do prometheus nao tem amostra anterior e o alerta da PRIMEIRA ocorrencia
+    nunca dispara. apareceu no exercicio de incidente da demo.
+    """
+    from app.models import AuditAction, PerfilCliente
+
+    for acao in AuditAction:
+        SECURITY_EVENTS.labels(acao.value)
+    for motivo in MOTIVOS_TOKEN:
+        TOKENS_REJECTED.labels(motivo)
+    for resultado in ("sucesso", "falha"):
+        for cliente in (*CLIENTES_CONHECIDOS, "outro"):
+            LOGINS.labels(resultado, cliente)
+    for perfil in PerfilCliente:
+        ML_PREDICTIONS.labels(perfil.value)
+    for rota in ("/v1/auth/login", "/v1/auth/refresh", "/v1/leads", "/v1/clientes", "/v1/llm-assist"):
+        RATE_LIMITED.labels(rota)

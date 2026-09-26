@@ -12,7 +12,7 @@ from app.api.v1 import api_v1
 from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
-from app.core.metrics import RATE_LIMITED, MetricsMiddleware, metrics_response, route_label
+from app.core.metrics import RATE_LIMITED, MetricsMiddleware, inicializar_series, metrics_response, route_label
 from app.core.middleware import RequestIdMiddleware, SecurityHeadersMiddleware
 from app.core.ratelimit import limiter
 from app.core.security import ensure_jwt_keys
@@ -45,6 +45,7 @@ async def lifespan(_app: FastAPI):
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    inicializar_series()
 
     app = FastAPI(
         title="PrevioPLS Security API",
