@@ -6,10 +6,11 @@ ARG PYTHON_IMAGE=python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f
 
 FROM ${PYTHON_IMAGE} AS build
 ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /build
 RUN python -m venv /opt/venv
 ENV PATH=/opt/venv/bin:$PATH
 COPY requirements.txt .
-RUN pip install --upgrade pip \
+RUN pip install --upgrade pip==26.2.1 \
  && pip install -r requirements.txt
 
 FROM ${PYTHON_IMAGE} AS runtime
@@ -31,6 +32,12 @@ RUN apt-get update \
  && chown app:app /app/keys /var/log/previopls
 
 COPY --from=build /opt/venv /opt/venv
+
+# pip nao tem funcao em runtime e trazia msgpack/setuptools vendorizados com CVE HIGH
+# (achado do trivy na imagem). sem gerenciador de pacote, invasor tambem nao instala nada
+RUN rm -rf /opt/venv/bin/pip* /opt/venv/lib/python3.12/site-packages/pip* \
+           /usr/local/bin/pip* /usr/local/lib/python3.12/site-packages/pip* \
+           /usr/local/lib/python3.12/ensurepip
 
 WORKDIR /app
 # codigo pertence ao root e o processo roda como 10001: nao da pra reescrever a app em runtime
