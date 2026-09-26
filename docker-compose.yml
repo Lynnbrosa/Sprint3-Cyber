@@ -199,7 +199,7 @@ services:
     pids_limit: 50
 
   loki:
-    image: grafana/loki:3.4.2
+    image: grafana/loki:3.7.8
     <<: *hardening
     command: ["-config.file=/etc/loki/loki.yml"]
     volumes:
