@@ -1,46 +1,312 @@
+# stack completa da sprint 3: api + IoT + observabilidade
+#   python scripts/bootstrap_env.py && docker compose up -d --build
+# portas publicadas: 8443 (api via nginx), 8080 (redirect), 8883 (MQTT TLS).
+# grafana/prometheus/alertmanager so em 127.0.0.1.
+
+name: cyber3
+
+x-hardening: &hardening
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+x-app-env: &app-env
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-previopls}:${POSTGRES_PASSWORD:?rode scripts/bootstrap_env.py}@db:5432/${POSTGRES_DB:-previopls}
+    FORWARDED_ALLOW_IPS: 172.30.10.10
+    MQTT_CERTS_DIR: /certs
+
 services:
+  # gera CA, TLS do nginx e certificados MQTT uma vez; roda sem rede nenhuma
+  certgen:
+    build: .
+    image: previopls-security:dev
+    user: "0:0"
+    entrypoint: ["python", "scripts/gen_certs.py", "--out", "/out", "--log-nginx", "/out/logs-nginx"]
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER]
+    security_opt: ["no-new-privileges:true"]
+    restart: "no"
+    volumes:
+      - certs_ca:/out/ca
+      - certs_nginx:/out/nginx
+      - certs_broker:/out/broker
+      - certs_ingestor:/out/ingestor
+      - certs_veiculos:/out/veiculos
+      - certs_atacante:/out/atacante
+      - nginx_logs:/out/logs-nginx
+
   db:
     image: postgres:16-alpine
-    restart: unless-stopped
+    <<: *hardening
+    user: "70:70"
     environment:
-      POSTGRES_USER: previopls
-      POSTGRES_PASSWORD: previopls
-      POSTGRES_DB: previopls
+      POSTGRES_USER: ${POSTGRES_USER:-previopls}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?rode scripts/bootstrap_env.py}
+      POSTGRES_DB: ${POSTGRES_DB:-previopls}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    tmpfs: [/var/run/postgresql, /tmp]
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks: [backend]
+    mem_limit: 512m
+    pids_limit: 200
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U previopls -d previopls"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   api:
-    build: .
-    restart: unless-stopped
-    env_file: .env
+    image: previopls-security:dev
+    <<: [*hardening, *app-env]
     environment:
-      DATABASE_URL: postgresql+psycopg://previopls:previopls@db:5432/previopls
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-previopls}:${POSTGRES_PASSWORD:?rode scripts/bootstrap_env.py}@db:5432/${POSTGRES_DB:-previopls}
+      FORWARDED_ALLOW_IPS: 172.30.10.10
+      LOG_FILE: /var/log/previopls/api.jsonl
+    tmpfs: [/tmp]
     volumes:
-      - ./keys:/app/keys:ro
+      - jwt_keys:/app/keys
+      - api_logs:/var/log/previopls
+    networks:
+      edge: { ipv4_address: 172.30.10.20 }
+      backend: {}
+      observability: {}
+    expose: ["8000"]
+    mem_limit: 512m
+    pids_limit: 200
     depends_on:
-      db:
-        condition: service_healthy
-    expose:
-      - "8000"
-    # Sem ports: o backend NÃO é exposto na rede do host.
-    # Todo o tráfego passa pelo nginx em 443.
+      db: { condition: service_healthy }
+      certgen: { condition: service_completed_successfully }
+
+  mosquitto:
+    image: eclipse-mosquitto:2.1.2
+    <<: *hardening
+    user: "1883:1883"
+    volumes:
+      - ./iot/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./iot/mosquitto/acl:/mosquitto/config/acl:ro
+      - certs_broker:/mosquitto/certs:ro
+      - mqtt_logs:/mosquitto/log
+    ports: ["8883:8883"]
+    networks: [iot]
+    mem_limit: 128m
+    pids_limit: 100
+    depends_on:
+      certgen: { condition: service_completed_successfully }
+
+  ingestor:
+    image: previopls-security:dev
+    <<: [*hardening, *app-env]
+    entrypoint: ["python", "-m", "app.iot.ingestor"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-previopls}:${POSTGRES_PASSWORD:?rode scripts/bootstrap_env.py}@db:5432/${POSTGRES_DB:-previopls}
+      MQTT_HOST: mosquitto
+      MQTT_CERTS_DIR: /certs
+      LOG_FILE: /var/log/previopls/ingestor.jsonl
+    volumes:
+      - certs_ingestor:/certs:ro
+      - ingestor_logs:/var/log/previopls
+    networks: [iot, backend, observability]
+    mem_limit: 256m
+    pids_limit: 100
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9101/metrics', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      api: { condition: service_healthy }
+      mosquitto: { condition: service_started }
 
   nginx:
-    image: nginx:1.27-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
+    image: nginxinc/nginx-unprivileged:1.30.5-alpine
+    <<: *hardening
+    tmpfs: [/tmp, /var/cache/nginx]
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/certs:/etc/nginx/certs:ro
+      - certs_nginx:/etc/nginx/certs:ro
+      - nginx_logs:/var/log/nginx/json
+    ports: ["8080:8080", "8443:8443"]
+    networks:
+      edge: { ipv4_address: 172.30.10.10 }
+    mem_limit: 128m
+    pids_limit: 100
     depends_on:
-      - api
+      api: { condition: service_healthy }
+
+  # ---- observabilidade ----------------------------------------------------
+  alert-sink:
+    image: previopls-security:dev
+    <<: [*hardening, *app-env]
+    entrypoint: ["python", "-m", "app.ops.alert_sink"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9102/metrics', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    environment:
+      LOG_FILE: /var/log/previopls/alertas.jsonl
+    volumes:
+      - alert_logs:/var/log/previopls
+    networks: [observability, edge]
+    mem_limit: 128m
+    pids_limit: 50
+    depends_on:
+      certgen: { condition: service_completed_successfully }
+
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    <<: *hardening
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./observability/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    secrets: [metrics_token]
+    ports: ["127.0.0.1:9090:9090"]
+    networks: [observability]
+    mem_limit: 512m
+    pids_limit: 100
+
+  alertmanager:
+    image: prom/alertmanager:v0.34.1
+    <<: *hardening
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ./observability/alertmanager:/etc/alertmanager:ro
+      - alertmanager_data:/alertmanager
+    ports: ["127.0.0.1:9093:9093"]
+    networks: [observability]
+    mem_limit: 128m
+    pids_limit: 50
+
+  loki:
+    image: grafana/loki:3.4.2
+    <<: *hardening
+    command: ["-config.file=/etc/loki/loki.yml"]
+    volumes:
+      - ./observability/loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki_data:/loki
+    networks: [observability]
+    mem_limit: 512m
+    pids_limit: 200
+
+  # le os arquivos de log em volume read-only; sem docker.sock montado
+  promtail:
+    image: grafana/promtail:3.4.2
+    <<: *hardening
+    command: ["-config.file=/etc/promtail/promtail.yml"]
+    volumes:
+      - ./observability/promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - api_logs:/logs/api:ro
+      - ingestor_logs:/logs/ingestor:ro
+      - alert_logs:/logs/alertas:ro
+      - nginx_logs:/logs/nginx:ro
+      - mqtt_logs:/logs/mosquitto:ro
+      - promtail_positions:/positions
+    networks: [observability]
+    mem_limit: 128m
+    pids_limit: 100
+    depends_on: [loki]
+
+  grafana:
+    image: grafana/grafana:13.2.2
+    <<: *hardening
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?rode scripts/bootstrap_env.py}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SECURITY_DISABLE_GRAVATAR: "true"
+      GF_SECURITY_COOKIE_SAMESITE: strict
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+    tmpfs: [/tmp]
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports: ["127.0.0.1:3300:3000"]
+    networks: [observability]
+    mem_limit: 256m
+    pids_limit: 200
+    depends_on: [prometheus, loki]
+
+  # ---- demo (so com --profile demo) ---------------------------------------
+  simulador:
+    image: previopls-security:dev
+    profiles: [demo]
+    <<: *hardening
+    entrypoint: ["python", "-m", "app.iot.simulador"]
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_CERTS_DIR: /certs
+      MQTT_ATACANTE_DIR: /certs-atacante
+    volumes:
+      - certs_veiculos:/certs:ro
+      - certs_atacante:/certs-atacante:ro
+    networks: [iot]
+    restart: "no"
+
+  trafego:
+    image: previopls-security:dev
+    profiles: [demo]
+    <<: *hardening
+    entrypoint: ["python", "-m", "app.ops.demo_trafego"]
+    env_file: .env
+    environment:
+      DEMO_BASE_URL: https://localhost:8443
+      DEMO_CA: /certs/ca.crt
+    volumes:
+      - certs_nginx:/certs:ro
+    network_mode: "service:nginx"
+    restart: "no"
+
+secrets:
+  # gerado pelo scripts/bootstrap_env.py junto do .env (os dois fora do git)
+  metrics_token:
+    file: ./.secrets/metrics_token
+
+networks:
+  edge:
+    ipam:
+      config: [{ subnet: 172.30.10.0/24 }]
+  # banco sem rota pra fora: so api e ingestor alcancam
+  backend:
+    internal: true
+  iot: {}
+  observability: {}
 
 volumes:
   pgdata:
+  jwt_keys:
+  api_logs:
+  ingestor_logs:
+  alert_logs:
+  nginx_logs:
+  mqtt_logs:
+  promtail_positions:
+  prometheus_data:
+  alertmanager_data:
+  loki_data:
+  grafana_data:
+  certs_ca:
+  certs_nginx:
+  certs_broker:
+  certs_ingestor:
+  certs_veiculos:
+  certs_atacante:

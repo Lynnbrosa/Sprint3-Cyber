@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     lockout_window_seconds: int = 60
     lockout_duration_seconds: int = 900
 
+    mass_query_threshold: int = 50
+
     retention_years: int = 5
     telemetria_retention_days: int = 90
 

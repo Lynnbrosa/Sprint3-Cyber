@@ -11,7 +11,7 @@ Gera os certificados de desenvolvimento (roda no container certgen do compose, u
 Em produção: CA em HSM/KMS (AWS Private CA, Vault PKI), certificado de veículo
 provisionado na fábrica e com validade curta. Nada disso sai desta pasta pro git.
 
-    python scripts/gen_certs.py [--out ./certs] [--uid-api 10001] [--uid-broker 1883]
+    python scripts/gen_certs.py [--out ./certs] [--uid-api 10001] [--uid-broker 1883] [--uid-nginx 101]
 """
 from __future__ import annotations
 
@@ -98,8 +98,16 @@ def main() -> None:
     ap.add_argument("--out", default="/out")
     ap.add_argument("--uid-api", type=int, default=10001)
     ap.add_argument("--uid-broker", type=int, default=1883)
+    ap.add_argument("--uid-nginx", type=int, default=101)
+    ap.add_argument("--log-nginx", default="", help="volume de log do nginx a entregar pro uid do nginx")
     a = ap.parse_args()
     out = Path(a.out)
+
+    # volume nomeado nasce root; o nginx sem privilegio (uid 101) nao escreveria nele
+    if a.log_nginx:
+        Path(a.log_nginx).mkdir(parents=True, exist_ok=True)
+        if hasattr(os, "chown"):
+            os.chown(a.log_nginx, a.uid_nginx, a.uid_nginx)
 
     if (out / "ca" / "ca.crt").exists():
         print("certgen: certificados ja existem, nada a fazer")
@@ -110,7 +118,7 @@ def main() -> None:
 
     nginx_cert, nginx_key = _emitir(ca_cert, ca_key, "localhost", servidor=True,
                                     sans=["localhost", "previopls.local", "127.0.0.1"])
-    _salvar(out / "nginx", "tls", nginx_cert, nginx_key)
+    _salvar(out / "nginx", "tls", nginx_cert, nginx_key, uid=a.uid_nginx)
     _salvar(out / "nginx", "ca", ca_cert)
 
     srv_cert, srv_key = _emitir(ca_cert, ca_key, "mosquitto", servidor=True, sans=["mosquitto", "localhost", "127.0.0.1"])

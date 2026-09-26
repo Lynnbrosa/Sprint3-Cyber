@@ -1,0 +1,32 @@
+# Pod Security Admission "restricted": o cluster recusa pod privilegiado, root,
+# hostPath, hostNetwork ou capability extra neste namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: previopls
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: previopls-api
+  namespace: previopls
+# a api nao fala com o apiserver: sem token montado no pod
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: previopls-quota
+  namespace: previopls
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 4Gi
+    limits.cpu: "8"
+    limits.memory: 8Gi
+    pods: "30"

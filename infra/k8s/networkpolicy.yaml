@@ -1,0 +1,60 @@
+# default deny: nada entra nem sai do namespace sem regra explicita.
+# se um pod for comprometido ele nao alcanca banco de outro servico nem a internet
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: previopls
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-ingress
+  namespace: previopls
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/name: previopls-api }
+  policyTypes: [Ingress]
+  ingress:
+    # so o ingress controller chega na api
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: ingress-nginx }
+      ports: [{ port: 8000, protocol: TCP }]
+    # e o prometheus raspa /metrics
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: monitoring }
+      ports: [{ port: 8000, protocol: TCP }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-egress
+  namespace: previopls
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/name: previopls-api }
+  policyTypes: [Egress]
+  egress:
+    # postgres gerenciado (Azure Database / RDS) na subnet privada
+    - to:
+        - ipBlock: { cidr: 10.20.0.0/24 }
+      ports: [{ port: 5432, protocol: TCP }]
+    # redis do rate limit distribuido
+    - to:
+        - podSelector:
+            matchLabels: { app.kubernetes.io/name: redis }
+      ports: [{ port: 6379, protocol: TCP }]
+    # DNS do cluster
+    - to:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: kube-system }
+          podSelector:
+            matchLabels: { k8s-app: kube-dns }
+      ports:
+        - { port: 53, protocol: UDP }
+        - { port: 53, protocol: TCP }
