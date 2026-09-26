@@ -46,7 +46,8 @@ class _SlidingCounter:
 # Singletons em memória (substituir por Redis em ambiente multi-réplica).
 _login_failures = _SlidingCounter(window_seconds=60)
 _query_counter = _SlidingCounter(window_seconds=60)
-MASS_QUERY_THRESHOLD = 100
+# 50 listagens/min por usuario: o painel do consultor faz uma por tela, 50 e raspagem
+MASS_QUERY_THRESHOLD = get_settings().mass_query_threshold
 
 
 def notify_webhook(payload: dict) -> None:

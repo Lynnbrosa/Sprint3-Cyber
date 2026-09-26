@@ -51,33 +51,47 @@ def _leitura(vin: str, km: int) -> dict:
     }
 
 
-def _conectar(ctx: ssl.SSLContext, client_id: str) -> mqtt.Client:
+def _conectar(ctx: ssl.SSLContext, client_id: str, espera: float = 5.0) -> tuple[mqtt.Client, dict]:
+    """Conecta e espera o CONNACK. No TLS 1.3 o cliente termina o handshake antes de o broker
+    validar o certificado dele, entao 'connect() nao deu erro' nao prova nada: vale o CONNACK."""
+    estado: dict = {"connack": None, "desconexao": None, "pubacks": {}}
     c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=client_id, protocol=mqtt.MQTTv5)
     c.tls_set_context(ctx)
+    c.on_connect = lambda _c, _u, _f, rc, _p: estado.update(connack=rc)
+    c.on_disconnect = lambda _c, _u, _f, rc, _p: estado.update(desconexao=rc)
+    c.on_publish = lambda _c, _u, mid, rc, _p: estado["pubacks"].__setitem__(mid, rc)
     c.connect(HOST, PORTA, keepalive=30)
     c.loop_start()
-    return c
+    limite = time.time() + espera
+    while estado["connack"] is None and estado["desconexao"] is None and time.time() < limite:
+        time.sleep(0.05)
+    return c, estado
 
 
-def _publicar(c: mqtt.Client, topico: str, corpo: bytes) -> str:
+def _publicar(c: mqtt.Client, estado: dict, topico: str, corpo: bytes) -> str:
     info = c.publish(topico, corpo, qos=1)
     info.wait_for_publish(timeout=5)
-    return "enviada" if info.is_published() else "sem_puback"
+    rc = estado["pubacks"].get(info.mid)
+    if rc is None:
+        return "sem PUBACK"
+    return f"PUBACK {rc}" + (" (recusado)" if rc.is_failure else "")
 
 
 def _handshake(ctx: ssl.SSLContext, rotulo: str) -> int:
     try:
-        c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=f"sim-{rotulo}", protocol=mqtt.MQTTv5)
-        c.tls_set_context(ctx)
-        c.connect(HOST, PORTA, keepalive=10)
-        c.loop_start()
-        c.publish(f"ford/telemetria/{VINS[0]}", b"{}", qos=1).wait_for_publish(timeout=3)
-        c.loop_stop()
-        print(f"[{rotulo}] FALHA DE CONTROLE: broker aceitou a conexao")
-        return 1
-    except (ssl.SSLError, OSError, ValueError, RuntimeError) as e:
-        print(f"[{rotulo}] recusado pelo broker: {type(e).__name__}: {str(e)[:120]}")
+        c, estado = _conectar(ctx, f"sim-{rotulo}", espera=4)
+    except (ssl.SSLError, OSError) as e:
+        print(f"[{rotulo}] recusado no handshake: {type(e).__name__}: {str(e)[:120]}")
         return 0
+    c.loop_stop()
+    rc = estado["connack"]
+    if rc is not None and not rc.is_failure:
+        print(f"[{rotulo}] FALHA DE CONTROLE: broker mandou CONNACK {rc}")
+        return 1
+    motivo = estado["desconexao"] or "conexao encerrada pelo broker"
+    print(f"[{rotulo}] recusado pelo broker antes do CONNACK: {motivo} "
+          "(log do mosquitto: 'peer did not return a certificate' / 'certificate verify failed')")
+    return 0
 
 
 def main() -> int:
@@ -104,14 +118,17 @@ def main() -> int:
             print(f"[texto-claro] porta 1883 fechada: {type(e).__name__}")
             return 0
 
-    c = _conectar(_ctx(ca, cert, chave), f"veiculo-{a.vin}")
+    c, estado = _conectar(_ctx(ca, cert, chave), f"veiculo-{a.vin}")
+    if estado["connack"] is None or estado["connack"].is_failure:
+        print(f"[{a.modo}] broker recusou o veiculo: {estado}")
+        return 1
     km = random.randint(12_000, 60_000)
     try:
         if a.modo == "topico-alheio":
             outro = VINS[1] if a.vin == VINS[0] else VINS[0]
-            r = _publicar(c, f"ford/telemetria/{outro}", json.dumps(_leitura(outro, km)).encode())
-            print(f"[topico-alheio] {a.vin} publicou em ford/telemetria/{outro}: {r} "
-                  "(a ACL descarta; o ingestor nao recebe nada)")
+            r = _publicar(c, estado, f"ford/telemetria/{outro}", json.dumps(_leitura(outro, km)).encode())
+            print(f"[topico-alheio] {a.vin} tentou publicar em ford/telemetria/{outro}: {r} "
+                  "(ACL por CN: o ingestor nao recebe nada)")
         elif a.modo == "payload-invalido":
             casos = {
                 "campo_extra": {**_leitura(a.vin, km), "comando": "unlock_doors"},
@@ -120,17 +137,19 @@ def main() -> int:
                 "relogio_futuro": {**_leitura(a.vin, km), "ts": "2031-01-01T00:00:00Z"},
             }
             for nome, corpo in casos.items():
-                print(f"[payload-invalido] {nome}: {_publicar(c, f'ford/telemetria/{a.vin}', json.dumps(corpo).encode())}")
-            print(f"[payload-invalido] payload_grande: {_publicar(c, f'ford/telemetria/{a.vin}', b'x' * 3000)}")
+                r = _publicar(c, estado, f"ford/telemetria/{a.vin}", json.dumps(corpo).encode())
+                print(f"[payload-invalido] {nome}: {r} (broker entrega; o ingestor valida e recusa)")
+            r = _publicar(c, estado, f"ford/telemetria/{a.vin}", b"x" * 3000)
+            print(f"[payload-invalido] payload_grande: {r}")
         elif a.modo == "odometro-regressivo":
-            _publicar(c, f"ford/telemetria/{a.vin}", json.dumps(_leitura(a.vin, km)).encode())
+            _publicar(c, estado, f"ford/telemetria/{a.vin}", json.dumps(_leitura(a.vin, km)).encode())
             time.sleep(0.5)
-            r = _publicar(c, f"ford/telemetria/{a.vin}", json.dumps(_leitura(a.vin, km - 8_000)).encode())
+            r = _publicar(c, estado, f"ford/telemetria/{a.vin}", json.dumps(_leitura(a.vin, km - 8_000)).encode())
             print(f"[odometro-regressivo] {km} -> {km - 8000}: {r} (ingestor deve recusar)")
         else:
             for i in range(a.n):
                 km += random.randint(5, 900)
-                r = _publicar(c, f"ford/telemetria/{a.vin}", json.dumps(_leitura(a.vin, km)).encode())
+                r = _publicar(c, estado, f"ford/telemetria/{a.vin}", json.dumps(_leitura(a.vin, km)).encode())
                 print(f"[normal] {a.vin} leitura {i + 1}/{a.n} km={km}: {r}")
                 time.sleep(a.intervalo)
     finally:

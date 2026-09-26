@@ -1,0 +1,48 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: warn
+
+positions:
+  filename: /positions/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: api
+    static_configs:
+      - targets: [localhost]
+        labels: { job: api, __path__: /logs/api/*.jsonl }
+    pipeline_stages: &json_app
+      - json:
+          expressions: { level: level, event: event, ts: timestamp }
+      - labels: { level: "", event: "" }
+      - timestamp: { source: ts, format: RFC3339Nano }
+
+  - job_name: ingestor
+    static_configs:
+      - targets: [localhost]
+        labels: { job: ingestor, __path__: /logs/ingestor/*.jsonl }
+    pipeline_stages: *json_app
+
+  - job_name: alertas
+    static_configs:
+      - targets: [localhost]
+        labels: { job: alertas, __path__: /logs/alertas/*.jsonl }
+    pipeline_stages: *json_app
+
+  - job_name: nginx
+    static_configs:
+      - targets: [localhost]
+        labels: { job: nginx, __path__: /logs/nginx/access.log }
+    pipeline_stages:
+      - json:
+          expressions: { status: status, ts: time }
+      - labels: { status: "" }
+      - timestamp: { source: ts, format: RFC3339 }
+
+  - job_name: mosquitto
+    static_configs:
+      - targets: [localhost]
+        labels: { job: mosquitto, __path__: /logs/mosquitto/mosquitto.log }

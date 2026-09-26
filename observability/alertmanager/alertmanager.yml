@@ -1,0 +1,28 @@
+# em producao os receivers apontam pro canal de plantao (Teams/Slack/PagerDuty).
+# na demo tudo vai pro alert-sink, que registra o incidente no Loki
+route:
+  receiver: soc
+  group_by: [alertname, dominio]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 4h
+  routes:
+    - matchers: ['severity="critical"']
+      receiver: soc-critico
+      group_wait: 0s
+      repeat_interval: 15m
+
+receivers:
+  - name: soc
+    webhook_configs:
+      - url: http://alert-sink:9095/api/alertmanager
+        send_resolved: true
+  - name: soc-critico
+    webhook_configs:
+      - url: http://alert-sink:9095/api/alertmanager
+        send_resolved: true
+
+inhibit_rules:
+  # api fora do ar gera 5xx e latencia; so o alerta raiz interessa
+  - source_matchers: ['alertname="ComponenteForaDoAr"']
+    target_matchers: ['dominio="api"']

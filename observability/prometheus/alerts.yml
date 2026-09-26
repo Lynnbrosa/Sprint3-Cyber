@@ -1,0 +1,135 @@
+# cada alerta aponta pro runbook em docs/runbooks (fase de analise/contencao do plano de resposta)
+groups:
+  - name: seguranca
+    rules:
+      - alert: ForcaBrutaLogin
+        expr: sum(increase(previopls_security_events_total{action="LOGIN_FAILED"}[5m])) > 10
+        labels: { severity: high, dominio: api }
+        annotations:
+          summary: "Mais de 10 falhas de login em 5 min"
+          description: "{{ $value | printf \"%.0f\" }} LOGIN_FAILED nos ultimos 5 min. Possivel forca bruta ou credential stuffing."
+          runbook: docs/runbooks/RB-01-forca-bruta.md
+
+      - alert: ContaBloqueadaPorLockout
+        expr: sum(increase(previopls_security_events_total{action="LOGIN_LOCKED"}[5m])) > 0
+        labels: { severity: medium, dominio: api }
+        annotations:
+          summary: "Conta bloqueada pelo lockout (5 falhas/60s)"
+          runbook: docs/runbooks/RB-01-forca-bruta.md
+
+      - alert: ReusoDeRefreshToken
+        expr: sum(increase(previopls_security_events_total{action="REFRESH_REUSE_DETECTED"}[10m])) > 0
+        labels: { severity: critical, dominio: api }
+        annotations:
+          summary: "Refresh token reutilizado: provavel roubo de sessao"
+          description: "A familia de sessoes ja foi revogada automaticamente. Confirmar com o usuario e investigar o dispositivo."
+          runbook: docs/runbooks/RB-02-sessao-comprometida.md
+
+      - alert: TentativasDeEscalacaoDePrivilegio
+        expr: sum(increase(previopls_security_events_total{action="FORBIDDEN_ACCESS"}[5m])) > 5
+        labels: { severity: high, dominio: api }
+        annotations:
+          summary: "Mais de 5 acessos negados por papel (RBAC) em 5 min"
+          runbook: docs/runbooks/RB-02-sessao-comprometida.md
+
+      - alert: AssinaturaHMACRejeitada
+        expr: sum(increase(previopls_security_events_total{action="SIGNATURE_REJECTED"}[5m])) > 3
+        labels: { severity: high, dominio: integracao }
+        annotations:
+          summary: "Webhooks de faturamento com assinatura invalida ou replay"
+          runbook: docs/runbooks/RB-03-integracao-adulterada.md
+
+      - alert: ConsultaMassivaDeLeads
+        expr: sum(increase(previopls_security_events_total{action="MASS_QUERY_DETECTED"}[10m])) > 0
+        labels: { severity: high, dominio: dados }
+        annotations:
+          summary: "Usuario listando leads acima do normal (possivel exfiltracao de PII)"
+          runbook: docs/runbooks/RB-04-vazamento-de-dados.md
+
+      - alert: FloodBarradoPeloRateLimit
+        expr: sum(increase(previopls_rate_limited_total[5m])) > 50
+        labels: { severity: medium, dominio: api }
+        annotations:
+          summary: "Mais de 50 requisicoes barradas por rate limit em 5 min"
+          runbook: docs/runbooks/RB-01-forca-bruta.md
+
+      - alert: TokensInvalidosEmMassa
+        expr: sum(increase(previopls_auth_tokens_rejected_total{reason=~"invalido|revogado|sessao_revogada|tipo_errado"}[5m])) > 20
+        labels: { severity: medium, dominio: api }
+        annotations:
+          summary: "Muitos JWT invalidos ou revogados (token forjado ou reaproveitado)"
+          runbook: docs/runbooks/RB-02-sessao-comprometida.md
+
+  - name: iot
+    rules:
+      - alert: TelemetriaSuspeita
+        expr: sum(increase(previopls_iot_messages_total{result="rejeitada",motivo=~"vin_divergente|odometro_regressivo"}[10m])) > 0
+        labels: { severity: high, dominio: iot }
+        annotations:
+          summary: "Telemetria com VIN divergente ou odometro voltando"
+          description: "Indicio de adulteracao de km ou dispositivo clonado."
+          runbook: docs/runbooks/RB-05-dispositivo-iot.md
+
+      - alert: TelemetriaInvalidaEmMassa
+        expr: sum(increase(previopls_iot_messages_total{result="rejeitada"}[5m])) > 20
+        labels: { severity: medium, dominio: iot }
+        annotations:
+          summary: "Mais de 20 mensagens MQTT recusadas pelo ingestor em 5 min"
+          runbook: docs/runbooks/RB-05-dispositivo-iot.md
+
+      - alert: IngestorSemBroker
+        expr: max(previopls_iot_broker_connected) == 0
+        for: 2m
+        labels: { severity: high, dominio: iot }
+        annotations:
+          summary: "Ingestor desconectado do broker MQTT ha 2 min"
+          runbook: docs/runbooks/RB-05-dispositivo-iot.md
+
+  - name: disponibilidade
+    rules:
+      - alert: ComponenteForaDoAr
+        expr: up{job=~"api|ingestor|alert-sink"} == 0
+        for: 1m
+        labels: { severity: critical, dominio: infra }
+        annotations:
+          summary: "{{ $labels.job }} sem responder ao Prometheus"
+          runbook: docs/runbooks/RB-06-indisponibilidade.md
+
+      - alert: TaxaDeErro5xxAlta
+        expr: |
+          sum(rate(previopls_http_requests_total{status=~"5.."}[5m]))
+            / clamp_min(sum(rate(previopls_http_requests_total[5m])), 0.001) > 0.05
+        for: 5m
+        labels: { severity: high, dominio: api }
+        annotations:
+          summary: "Mais de 5% das respostas da api com erro 5xx"
+          runbook: docs/runbooks/RB-06-indisponibilidade.md
+
+      - alert: LatenciaP95Alta
+        expr: histogram_quantile(0.95, sum by (le) (rate(previopls_http_request_duration_seconds_bucket[5m]))) > 1
+        for: 10m
+        labels: { severity: medium, dominio: api }
+        annotations:
+          summary: "p95 da api acima de 1 s"
+          runbook: docs/runbooks/RB-06-indisponibilidade.md
+
+  - name: ml
+    rules:
+      - alert: InferenciaLenta
+        expr: histogram_quantile(0.95, sum by (le) (rate(previopls_ml_inference_seconds_bucket[10m]))) > 0.1
+        for: 10m
+        labels: { severity: medium, dominio: ml }
+        annotations:
+          summary: "p95 da classificacao D0 acima de 100 ms"
+          runbook: docs/runbooks/RB-06-indisponibilidade.md
+
+      # baseline do modelo: ~15% abandono. fatia acima de 40% em 1h = drift ou envenenamento de entrada
+      - alert: DriftNoPerfilPrevisto
+        expr: |
+          (sum(increase(previopls_ml_predictions_total{perfil="abandono"}[1h]))
+            / clamp_min(sum(increase(previopls_ml_predictions_total[1h])), 1)) > 0.40
+          and sum(increase(previopls_ml_predictions_total[1h])) > 20
+        labels: { severity: medium, dominio: ml }
+        annotations:
+          summary: "Fatia de 'abandono' fora do baseline do modelo"
+          runbook: docs/runbooks/RB-07-modelo-ml.md
