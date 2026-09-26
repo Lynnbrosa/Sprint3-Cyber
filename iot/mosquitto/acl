@@ -1,0 +1,7 @@
+# ingestor so le a telemetria, nao publica nada
+user ingestor
+topic read ford/telemetria/+
+
+# veiculo (CN = VIN) so publica no proprio topico. %u = usuario = CN do certificado.
+# um carro comprometido nao consegue falar em nome de outro VIN nem assinar topico nenhum
+pattern write ford/telemetria/%u

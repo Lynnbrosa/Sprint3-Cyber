@@ -7,6 +7,7 @@ from app.models.audit_log import AuditLog, AuditAction
 from app.models.login_attempt import LoginAttempt
 from app.models.revoked_token import RevokedToken
 from app.models.hmac_nonce import HmacNonce
+from app.models.telemetria import Telemetria
 
 __all__ = [
     "Usuario", "RolePapel",
@@ -18,4 +19,5 @@ __all__ = [
     "LoginAttempt",
     "RevokedToken",
     "HmacNonce",
+    "Telemetria",
 ]

@@ -63,3 +63,17 @@ def anonymize_expired(db: Session, dry_run: bool = False) -> int:
     if not dry_run:
         db.commit()
     return count
+
+
+def purge_telemetria(db: Session, dias: int | None = None) -> int:
+    """Telemetria carrega localizacao (dado pessoal): passado o prazo, apaga de vez."""
+    from sqlalchemy import delete
+
+    from app.models import Telemetria
+
+    dias = dias or get_settings().telemetria_retention_days
+    cutoff = datetime.now(timezone.utc) - timedelta(days=dias)
+    apagadas = db.execute(delete(Telemetria).where(Telemetria.recebido_em < cutoff)).rowcount or 0
+    db.commit()
+    log.info("retention.telemetria_purged", count=apagadas, cutoff=cutoff.isoformat())
+    return apagadas

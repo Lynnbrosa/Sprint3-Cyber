@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     lockout_duration_seconds: int = 900
 
     retention_years: int = 5
+    telemetria_retention_days: int = 90
 
     security_alert_webhook_url: str = ""
 
