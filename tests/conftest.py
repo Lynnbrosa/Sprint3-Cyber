@@ -14,6 +14,7 @@ from cryptography.fernet import Fernet
 TEST_DB = os.environ.get("TEST_DATABASE_URL", "postgresql+psycopg://teste:teste@127.0.0.1:55432/teste")
 KEYS = Path(__file__).parent / "_keys"
 
+os.environ["PREVIOPLS_ENV_FILE"] = ""
 os.environ["APP_ENV"] = "testing"
 os.environ["DATABASE_URL"] = TEST_DB
 os.environ.setdefault("FERNET_KEYS", Fernet.generate_key().decode())

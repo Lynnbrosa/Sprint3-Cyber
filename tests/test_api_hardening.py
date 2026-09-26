@@ -185,3 +185,20 @@ def test_metrics_exige_token_quando_configurado(client, db, monkeypatch):
     monkeypatch.setattr(get_settings(), "metrics_token", "t0k3n-de-metricas")
     assert client.get("/metrics").status_code == 401
     assert client.get("/metrics", headers={"Authorization": "Bearer t0k3n-de-metricas"}).status_code == 200
+
+
+def test_rota_inexistente_e_metodo_errado_seguem_o_contrato_de_erro(client, db):
+    r = client.get("/nao-existe")
+    assert r.status_code == 404
+    assert r.json()["error"]["code"] == "HTTP_ERROR"
+    r = client.delete("/health")
+    assert r.status_code == 405
+    assert "error" in r.json()
+
+
+def test_series_de_seguranca_nascem_zeradas(client, db):
+    # sem isso o alerta da primeira ocorrencia nunca dispara (increase() precisa de amostra anterior)
+    corpo = client.get("/metrics").text
+    for acao in ("SIGNATURE_REJECTED", "MASS_QUERY_DETECTED", "REFRESH_REUSE_DETECTED", "LOGIN_LOCKED"):
+        assert f'previopls_security_events_total{{action="{acao}"}}' in corpo
+    assert 'previopls_auth_tokens_rejected_total{reason="revogado"}' in corpo

@@ -6,6 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.logging import get_logger
 
@@ -61,8 +62,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def handle_app_error(_request: Request, exc: AppError):
         return JSONResponse(status_code=exc.status_code, content=_body(exc.code, exc.message, exc.details))
 
-    @app.exception_handler(HTTPException)
-    async def handle_http(_request: Request, exc: HTTPException):
+    # registrado na do starlette (base da do fastapi): 404 de rota inexistente e 405 nascem
+    # la e saiam como {"detail": ...}, fora do contrato de erro
+    @app.exception_handler(StarletteHTTPException)
+    async def handle_http(_request: Request, exc: StarletteHTTPException):
         # sem repassar exc.headers o WWW-Authenticate do 401 se perdia aqui
         headers = getattr(exc, "headers", None)
         if isinstance(exc.detail, dict):
