@@ -1,0 +1,23 @@
+# executado em 27/09/2026 sobre os repositorios entregues (github.com/Lynnbrosa/<repo>)
+Sprint3-mobile @ 7c910d6: npm audit --omit=dev
+{'info': 0, 'low': 0, 'moderate': 14, 'high': 0, 'critical': 0, 'total': 14}
+
+moderate  @expo/cli                          via @expo/config, @expo/config-plugins, @expo/inline-modules, @expo/metro-config, @expo/prebuild-config
+moderate  @expo/config                       via @expo/config-plugins
+moderate  @expo/config-plugins               via xcode
+moderate  @expo/inline-modules               via @expo/config-plugins
+moderate  @expo/local-build-cache-provider   via @expo/config
+moderate  @expo/metro-config                 via @expo/config
+moderate  @expo/prebuild-config              via @expo/config, @expo/config-plugins
+moderate  decode-uri-component               via https://github.com/advisories/GHSA-vcc3-ghjq-m6fr
+moderate  expo                               via @expo/cli, @expo/config, @expo/config-plugins, @expo/local-build-cache-provider, @expo/metro-config
+moderate  expo-router                        via query-string
+moderate  expo-splash-screen                 via @expo/config-plugins
+moderate  query-string                       via decode-uri-component
+moderate  uuid                               via https://github.com/advisories/GHSA-w5hq-g745-h8pq
+moderate  xcode                              via uuid
+
+14 pacotes, 2 avisos de origem:
+  GHSA-w5hq-g745-h8pq uuid <11.1.1 (via xcode <- @expo/config-plugins: roda no prebuild, nao vai no APK)
+  GHSA-vcc3-ghjq-m6fr decode-uri-component <=0.4.2 (via query-string <- expo-router: DoS no parse de URL)
+o 'fix' sugerido pelo npm e rebaixar o expo para 46 (quebra); sem correcao upstream ainda -> risco aceito e monitorado

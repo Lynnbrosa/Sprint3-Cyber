@@ -87,3 +87,21 @@ rules:
     languages: [generic]
     paths: { include: ["Dockerfile", "*.sh", "docker-compose*.yml"] }
     pattern: forwarded-allow-ips=*
+
+  # pego no repo de IA/ML da sprint 3: nenhum pacote do registry cobre joblib
+  - id: modelo-carregado-sem-conferir-hash
+    message: >-
+      joblib/pickle executam codigo ao carregar: arquivo de modelo trocado vira execucao remota.
+      Confira o SHA-256 do arquivo contra um valor fixado fora da pasta do modelo antes do load.
+    severity: ERROR
+    languages: [python]
+    patterns:
+      - pattern-either:
+          - pattern: joblib.load(...)
+          - pattern: pickle.load(...)
+          - pattern: pickle.loads(...)
+      - pattern-not-inside: |
+          def $F(...):
+              ...
+              <... hashlib.sha256(...) ...>
+              ...

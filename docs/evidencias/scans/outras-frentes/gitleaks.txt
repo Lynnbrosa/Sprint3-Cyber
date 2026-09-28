@@ -1,0 +1,16 @@
+# executado em 27/09/2026 sobre os repositorios entregues (github.com/Lynnbrosa/<repo>)
+gitleaks git <repo> --redact  (historico inteiro)
+
+== Sprint3-SOA @ 02e4275: 5 alerta(s)
+  generic-api-key  .env.example:17  commit 47ee40a  -> REAL (F1): mesmo valor e o padrao do application.yml
+  generic-api-key  src/test/resources/application-test.yml:19  commit 47ee40a  -> falso positivo: segredo so do perfil de teste (H2)
+  jwt              docs/evidencias/e2e-api.md:906  commit 47ee40a  -> falso positivo: token de demo expirado, assinado com a chave de dev (vale redigir)
+  jwt              docs/evidencias/e2e-api.md:928  commit 47ee40a  -> falso positivo: token de demo expirado, assinado com a chave de dev (vale redigir)
+  jwt              docs/evidencias/e2e-api.md:955  commit 47ee40a  -> falso positivo: token de demo expirado, assinado com a chave de dev (vale redigir)
+
+== Sprint3-mobile @ 7c910d6: 0 alerta(s)
+
+== Sprint3-IA-ML @ b8c0ed3: 0 alerta(s)
+
+obs: o valor padrao de JWT_SECRET no application.yml nao e pego pelo gitleaks (texto legivel,
+sem entropia); foi achado na leitura do arquivo apontado pelo APP_CRYPTO_KEY.

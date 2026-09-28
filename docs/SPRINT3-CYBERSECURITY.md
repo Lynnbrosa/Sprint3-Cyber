@@ -33,8 +33,10 @@ códigos de falha OBD-II), que alimenta leads de revisão proativa.
 
 Este repositório concentra a camada de segurança: a **API de segurança** (FastAPI, borda LGPD do
 monorepo PrevioPLS), o **ingestor de telemetria MQTT**, a infraestrutura como código e o pipeline.
-O core de domínio (Spring Boot), o app (Expo) e o painel (Next.js) vivem no monorepo e entram
-aqui como parte do modelo de ameaças, do mapeamento OWASP e do desenho do pipeline.
+A API de domínio (Java/Spring Boot, `Sprint3-SOA`), o app do consultor (Expo, `Sprint3-mobile`) e o
+modelo de evasão (XGBoost, `Sprint3-IA-ML`) são entregas das outras disciplinas desta sprint e entram
+aqui pelo modelo de ameaças, pelo mapeamento OWASP e pelos estágios 1 a 3 do pipeline rodados no
+código delas (§1.5). O painel web (Next.js) vive no monorepo.
 
 ![Arquitetura e fronteiras de confiança](diagramas/arquitetura.svg)
 
@@ -104,10 +106,10 @@ de cada linguagem:
 | Serviço | SAST | SCA | Build/Imagem | Específico |
 |---|---|---|---|---|
 | API de segurança / gateway (Python) | semgrep + bandit | pip-audit | trivy image | regras `.semgrep/` deste repo |
-| Core de domínio (Java 21 / Spring) | semgrep `p/java` + SpotBugs/FindSecBugs | OWASP Dependency-Check / `trivy fs` no `pom.xml` | trivy image | testes de RBAC do Spring Security |
-| ml-api (Python + sklearn) | semgrep + bandit | pip-audit | trivy image | hash SHA-256 do `ml_model.pkl` verificado no boot (pickle de origem desconhecida executa código) |
+| API SOA (Java 21 / Spring Boot, `Sprint3-SOA`) | semgrep `p/java` + SpotBugs/FindSecBugs | OSV / `trivy fs` no `pom.xml`; Dependabot `maven` | trivy image | testes de RBAC do Spring Security |
+| IA/ML (Python + XGBoost, `Sprint3-IA-ML`) | semgrep + bandit + regra `modelo-carregado-sem-conferir-hash` | pip-audit com versões pinadas | trivy image | SHA-256 do `modelo_evasao.joblib` conferido antes do load (joblib executa código ao carregar) |
 | Painel (Next.js) | semgrep `p/typescript`, `p/react` | `npm audit --omit=dev` / OSV-Scanner | trivy image | ZAP full scan no staging |
-| App do consultor (Expo) | semgrep `p/typescript` | `npm audit` / OSV-Scanner | EAS Build → APK | **MobSF** estático no APK gerado (permissões, `allowBackup`, cleartext, segredos no bundle) |
+| App do consultor (Expo, `Sprint3-mobile`) | semgrep `p/typescript`, `p/react` | `npm audit` / OSV-Scanner | EAS Build → APK | **MobSF** estático no APK gerado (permissões, `allowBackup`, cleartext, segredos no bundle) |
 | Infra | — | — | — | hadolint + trivy config + `docker compose config` |
 | Telemetria (Mosquitto) | — | — | — | ataques MQTT do estágio 7 como teste de regressão |
 
@@ -164,7 +166,36 @@ exceção continua visível no próprio código e passa pela revisão do CODEOWN
 
 ![Pipeline DevSecOps aprovado no GitHub Actions (run #17)](evidencias/prints/pipeline-github-verde.png)
 
-### 1.5 Rotina contínua ligada ao pipeline
+### 1.5 O pipeline nas outras frentes da Sprint 3
+
+Os estágios 1 a 3 (segredo, SAST e dependências) rodaram nos repositórios das outras disciplinas,
+no estado entregue em 27/09/2026. Relatórios em
+[`docs/evidencias/scans/outras-frentes/`](evidencias/scans/outras-frentes/).
+
+| Repositório | Secret scanning (gitleaks, histórico inteiro) | SAST (semgrep) | SCA |
+|---|---|---|---|
+| `Sprint3-SOA` (Java 21, Spring Boot 3.3.4), `02e4275` | 5 alertas: 3 falsos positivos (tokens de demo expirados nas evidências, segredo do perfil de teste) e **2 reais** (F1) | `p/java`, `p/owasp-top-ten`, `p/jwt`, `p/secrets`: 0 em 86 arquivos | **85 vulnerabilidades conhecidas** (9 críticas, 29 altas) em 92 dependências de runtime, consultadas no OSV; quase todas vêm do Spring Boot 3.3.4 (Tomcat 10.1.30, Spring 6.1.13, Spring Security 6.3.3) |
+| `Sprint3-mobile` (Expo), `7c910d6` | 0 | `p/typescript`, `p/react`, `p/owasp-top-ten`, `p/secrets`: 0 em 64 arquivos | `npm audit --omit=dev`: 14 moderadas, 0 altas, todas de 2 avisos de origem (`uuid` só no prebuild; `decode-uri-component` via `expo-router`, DoS no parse de URL) sem correção upstream |
+| `Sprint3-IA-ML` (Python, XGBoost), `b8c0ed3` | 0 | `p/python`, `p/owasp-top-ten`, `p/secrets` e bandit: 0; **regra do projeto: 1** (F3) | pip-audit: 0, mas o `requirements.txt` usa `>=` e o resultado só vale para as versões de hoje |
+
+Os pacotes prontos não acharam nada no código das três frentes; os achados vieram do SCA, da
+triagem do gitleaks e de uma regra escrita para o projeto. Nenhum pacote do registry do semgrep
+cobre `joblib.load`, então a regra `modelo-carregado-sem-conferir-hash` entrou em `.semgrep/`:
+ela pega o `inferencia.py` e não acusa uma função que confere o SHA-256 antes do load (testada com
+um caso positivo e um negativo).
+
+| # | Frente | Achado | Risco | Correção proposta |
+|---|---|---|---|---|
+| F1 | SOA | `application.yml` tem valor padrão para `JWT_SECRET` e `APP_CRYPTO_KEY` (o mesmo do `.env.example` público) e o app sobe com ele se a variável faltar | quem lê o repositório assina JWT HS256 como admin e decifra a PII | tirar o padrão (`${JWT_SECRET}` sem valor) e recusar o boot fora do perfil de dev, como a API de segurança já faz (§2.2) |
+| F2 | SOA | Spring Boot 3.3.4, fora de suporte | CVEs críticas no Tomcat embutido e no Spring Security (bypass de autorização, request smuggling) | subir o `spring-boot-starter-parent` para 3.5.16, rodar a suíte do SOA e ligar o Dependabot `maven` no repositório |
+| F3 | IA/ML | `joblib.load` do modelo sem conferir hash (`src/inferencia.py:43`) | quem troca o `.joblib` executa código na máquina que carrega o modelo | gravar o SHA-256 no treino (fora da pasta do modelo) e conferir antes do load |
+| F4 | Mobile | APK com `usesCleartextTraffic: true`; logout que não apaga o cache de leads do AsyncStorage | MITM em rede aberta; o próximo usuário do aparelho vê os leads do anterior | cleartext desligado no build de produção e *pinning*; `Local.apagarPrefixo('previopls:cache:')` no `sair()` |
+
+As correções ficam com o repositório de cada disciplina e não foram aplicadas a partir deste. A
+troca do Spring Boot (F2) não foi validada aqui: a suíte do SOA precisa rodar no ambiente do time
+antes do merge.
+
+### 1.6 Rotina contínua ligada ao pipeline
 
 | Rotina | Onde está | Frequência |
 |---|---|---|
@@ -492,8 +523,8 @@ Legenda: ✅ mitigado e testado · 🟡 mitigado parcialmente / depende de produ
 | API | **E/I** consultor lê lead de outra concessionária (BOLA) | hoje o escopo é por papel, não por concessionária | 🔴 roadmap |
 | Integração | **T/S** webhook adulterado ou replay | HMAC + janela + nonce | ✅ |
 | Mobile | **I** token no aparelho | SecureStore (Keychain/Keystore) | ✅ |
-| Mobile | **I** cache de leads em AsyncStorage (texto claro) | limpar no logout + cifrar cache | 🟡 |
-| Mobile | **T** MITM | HTTPS obrigatório em release; *pinning* | 🟡 |
+| Mobile | **I** cache de leads em AsyncStorage (texto claro), que hoje sobrevive ao logout (F4) | limpar no logout + cifrar cache | 🟡 |
+| Mobile | **T** MITM: o APK da sprint aceita HTTP (F4) | cleartext desligado no build de produção; *pinning* | 🟡 |
 | IoT | **S** device falso / clonado | mTLS com CA interna, cert de 90 dias, CRL | ✅ |
 | IoT | **T** telemetria adulterada (km) | validação + odômetro regressivo + alerta | ✅ |
 | IoT | **E** device publica em nome de outro | ACL por CN | ✅ |
@@ -550,19 +581,19 @@ Legenda: ✅ mitigado e testado · 🟡 mitigado parcialmente / depende de produ
 | API9 Improper Inventory Management | `/v1` versionado, OpenAPI, SBOM por build | ✅ |
 | API10 Unsafe Consumption of APIs | core/ml-api com timeout e rede interna; resposta do LLM tratada como não confiável; HMAC na integração | ✅ |
 
-**Mobile Top 10** (app do consultor, Expo/React Native, no monorepo):
+**Mobile Top 10** (app do consultor, Expo/React Native, `Sprint3-mobile`):
 
 | Risco | Situação | Ação |
 |---|---|---|
 | M1 Improper Credential Usage | JWT e papel no `expo-secure-store`; nenhuma chave no bundle (só `EXPO_PUBLIC_API_URL`) | ✅ |
-| M2 Inadequate Supply Chain Security | dependências npm | `npm audit`/OSV no pipeline do app (§1.3) |
+| M2 Inadequate Supply Chain Security | `npm audit`: 14 moderadas de 2 avisos sem correção upstream, 0 altas (§1.5) | 🟡 monitorado; `npm audit`/OSV no pipeline do app |
 | M3 Insecure Authentication/Authorization | autorização só no servidor; 401 limpa a sessão local | ✅; desbloqueio por biometria (backlog) |
 | M4 Insufficient Input/Output Validation | servidor valida tudo; RN escapa texto | ✅ |
-| M5 Insecure Communication | URL padrão de dev é `http://10.0.2.2:5000` | 🟡 build de release falha se a URL não for `https`; `usesCleartextTraffic=false`; *certificate pinning* |
+| M5 Insecure Communication | APK com `usesCleartextTraffic: true` e URL padrão `http://10.0.2.2:5000` para a API local da demo; a tela de servidor avisa quando está sem TLS | 🟡 build de produção falha se a URL não for `https`; `usesCleartextTraffic=false`; *certificate pinning* |
 | M6 Inadequate Privacy Controls | API só entrega PII mascarada | ✅ |
 | M7 Insufficient Binary Protections | Hermes + R8/ProGuard no release; sem segredo no binário | ✅ |
 | M8 Security Misconfiguration | `android:allowBackup` e componentes exportados | 🟡 `allowBackup=false`, MobSF no APK |
-| M9 Insecure Data Storage | token no SecureStore; cache de leads no AsyncStorage | 🟡 cifrar o cache com chave no SecureStore e limpar no logout |
+| M9 Insecure Data Storage | token no SecureStore (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`); cache de leads no AsyncStorage, que o logout não apaga | 🟡 cifrar o cache com chave no SecureStore e limpar no logout |
 | M10 Insufficient Cryptography | nada de cripto própria; Keystore/Keychain | ✅ |
 
 ### 4.4 LGPD — dados pessoais, telemetria e localização
@@ -638,7 +669,7 @@ RPO de 24 h e RTO de 4 h no ambiente de demo; em produção, PITR de 5 min do ba
 | 3 | Actions pinadas por SHA e permissões mínimas | ✅ | workflow |
 | 4 | SBOM e assinatura de imagem | ✅ | jobs 6 e 8 |
 | 5 | Nenhum segredo no repositório nem no histórico | ✅ | gitleaks 0 (com triagem) |
-| 6 | Nenhuma dependência com CVE conhecida | ✅ | pip-audit 0 |
+| 6 | Nenhuma dependência com CVE conhecida (API de segurança) | ✅ | pip-audit 0 |
 | 7 | Imagem sem HIGH/CRITICAL corrigível | ✅ | trivy image |
 | 8 | IaC sem misconfig HIGH/CRITICAL | ✅ | trivy config, hadolint |
 | 9 | PII cifrada em repouso e mascarada em resposta/log | ✅ | §2.2, testes |
@@ -658,6 +689,8 @@ RPO de 24 h e RTO de 4 h no ambiente de demo; em produção, PITR de 5 min do ba
 | 23 | Escopo de lead por concessionária (BOLA) | 🔴 | roadmap |
 | 24 | Pinning e cache cifrado no app | 🟡 | roadmap mobile |
 | 25 | Chaves em KMS/HSM e mTLS entre serviços internos | 🟡 | roadmap de produção |
+| 26 | Segredo, SAST e SCA rodados nas outras frentes (SOA, mobile, IA/ML) | ✅ | §1.5 |
+| 27 | Achados F1–F4 das outras frentes corrigidos | 🔴 | com cada disciplina |
 
 ### 4.7 Riscos residuais e roadmap
 
@@ -669,6 +702,8 @@ RPO de 24 h e RTO de 4 h no ambiente de demo; em produção, PITR de 5 min do ba
 | Chave Fernet/JWT em variável/arquivo | ambiente acadêmico | Azure Key Vault / AWS KMS no deploy |
 | Tráfego interno em HTTP dentro da rede do cluster | rede isolada | service mesh com mTLS (Linkerd/Istio) |
 | Usuário único do banco escreve em `audit_logs` | migrations e app compartilham o papel | papéis separados (`app_rw` sem `UPDATE/DELETE` em `audit_logs`) |
+| F1 e F2 no SOA (segredo padrão, Spring Boot com CVE crítica) | repositório de outra disciplina, entregue antes deste scan | antes de qualquer deploy do SOA |
+| F3 e F4 (modelo sem hash; cleartext e cache no app) | idem | Sprint 4 |
 | ZAP só em modo baseline (passivo) | o scan ativo demora mais que o job e grava dados de teste | full scan autenticado no staging antes do piloto |
 
 ---

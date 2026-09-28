@@ -1,0 +1,11 @@
+# executado em 27/09/2026 sobre os repositorios entregues (github.com/Lynnbrosa/<repo>)
+== Sprint3-SOA @ 02e4275: p/java p/owasp-top-ten p/jwt p/secrets (src/main)
+   86 arquivos, 0 achados, 0 erros
+== Sprint3-mobile @ 7c910d6: p/typescript p/react p/owasp-top-ten p/secrets
+   64 arquivos, 0 achados, 0 erros
+== Sprint3-IA-ML @ b8c0ed3: p/python p/owasp-top-ten p/secrets + bandit -r src
+   9 arquivos, 0 achados, 0 erros
+
+regra do projeto (.semgrep/previopls.yml, modelo-carregado-sem-conferir-hash) no Sprint3-IA-ML/src:
+   1 achado: src/inferencia.py:43  return joblib.load(caminho), meta
+   controle negativo (funcao que confere sha256 antes do load): 0 achados

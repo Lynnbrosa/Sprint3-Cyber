@@ -1,0 +1,4 @@
+# executado em 27/09/2026 sobre os repositorios entregues (github.com/Lynnbrosa/<repo>)
+Sprint3-IA-ML @ b8c0ed3: pip-audit -r requirements.txt
+No known vulnerabilities found
+obs: requirements com '>=' -> o resultado vale para as versoes resolvidas hoje, nao para o build de amanha
