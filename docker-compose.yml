@@ -131,7 +131,7 @@ services:
       mosquitto: { condition: service_started }
 
   nginx:
-    image: nginxinc/nginx-unprivileged:1.30.5-alpine
+    image: nginxinc/nginx-unprivileged:1.31.5-alpine
     <<: *hardening
     tmpfs: [/tmp, /var/cache/nginx]
     volumes:
