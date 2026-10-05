@@ -230,7 +230,7 @@ services:
     depends_on: [loki]
 
   grafana:
-    image: grafana/grafana:13.2.2
+    image: grafana/grafana:13.2.3
     <<: *hardening
     environment:
       GF_SECURITY_ADMIN_USER: admin
