@@ -169,7 +169,7 @@ services:
       certgen: { condition: service_completed_successfully }
 
   prometheus:
-    image: prom/prometheus:v3.15.0
+    image: prom/prometheus:v3.15.1
     <<: *hardening
     command:
       - --config.file=/etc/prometheus/prometheus.yml
